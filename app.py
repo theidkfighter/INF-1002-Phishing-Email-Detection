@@ -7,6 +7,7 @@ from domain_manager import DomainManager
 from domain_validator import DomainValidator
 from file_processor import CSVProcessor
 from susUrlDetect import susUrlDetect
+from editDistanceCheck import editDistanceCheck
 
 app = Flask(__name__)
 
@@ -70,13 +71,20 @@ def validate():
         else:
             result = domain_validator.validate_domain(domain_input)
         
+        # Runs edit distance check
+        if '@' in domain_input:
+            edit_distance_result = editDistanceCheck(domain_input, trusted_domains)
+        else:
+            edit_distance_result = editDistanceCheck(f"user@{domain_input}", trusted_domains)
+
         email_bodyRiskMsg = susUrlDetect(email_bodyInput) # THIS IS MY SUS URL DETECT FOR BODY RISK MSG BUT YOU MAY CHANGE TO YOUR CODE TO TRY IT OUT AND SEE IF IT WILL PRINT IN THE WEB
         result_dict = {
             "email": result.email,
             "domain": result.domain,
             "is_trusted": result.is_trusted,
             "message": result.message,
-            "bodyRiskMsg":email_bodyRiskMsg
+            "bodyRiskMsg": email_bodyRiskMsg,
+            "edit_distance": edit_distance_result
         }
 
         print(result_dict)
