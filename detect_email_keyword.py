@@ -140,16 +140,18 @@ def highlight_keywords(text: str, keywords: List[str]) -> str:
         highlighted_text = re.sub(pattern, f'**{keyword.upper()}**', highlighted_text, flags=re.IGNORECASE)
     return highlighted_text
 
-
-
-# Example usage and test function
-def test_keyword_detection():
+def import_word_list(word_list = "spam_word_list.csv"):
     word_list = []
     csv.field_size_limit(10000000)
     with open("spam_word_list.csv") as csvfile:
         reader = csv.reader(csvfile)
         for word in reader:
             word_list.append(word[0])
+
+
+
+"""# Example usage and test function
+def test_keyword_detection():
 
     with open("TREC_07.csv",encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile)
@@ -159,7 +161,7 @@ def test_keyword_detection():
 
             if results["total_score"] >= 5:
                 print(results)
-                """
+                
                 # Display analysis results
                 print("EMAIL ANALYSIS RESULTS")
                 print("=" * 60)
@@ -217,8 +219,3 @@ def test_keyword_detection():
                 print(" + ".join(components))
                 print(f"Thresholds: LOW (<2.0), MEDIUM (2.0-4.9), HIGH (≥5.0)")
             """
-
-        # Run the test
-if __name__ == "__main__":
-    #print("hello world")
-    test_keyword_detection()
