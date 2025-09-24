@@ -6,6 +6,7 @@ from config import MAX_FILE_SIZE
 from domain_manager import DomainManager
 from domain_validator import DomainValidator
 from file_processor import CSVProcessor
+from susUrlDetect import susUrlDetect
 
 app = Flask(__name__)
 
@@ -20,22 +21,23 @@ def index():
     return render_template('index.html')
 
 # Validates single or multiple senders' email domains
-@app.route('/validate', methods=['POST'])
+#THIS WHERE YOU WILL BE ADDING IN YOUR FUNCTIONS -ZQ
+@app.route('/validate', methods=['POST']) #THIS IS WHERE THE CODE WILL RUN AFTER THE USER PRESS THE BUTTON WITH VALID INPUTS/ VALID CSV FILES
 def validate():
 
     try:
         
-        if 'csv_file' in request.files:
+        if 'csv_file' in request.files: #THIS PART IS FOR CSV FILES AND YOU CAN EDIT BY ADDING YOUR FUNCTIONS AND TRY TO FIT INTO THE RESULTS DICT BELOW
             file = request.files['csv_file']
             if file and file.filename != '':
                 file.seek(0, 2)
                 file_size = file.tell()
                 file.seek(0)
                 
-                if file_size > MAX_FILE_SIZE:
+                if file_size > MAX_FILE_SIZE: #CHECK FILESIZE
                     return jsonify({"error": f"File too big. Maximum size is {MAX_FILE_SIZE//(1024*1024)}MB."}), 400
                 
-                if not file.filename.lower().endswith('.csv'):
+                if not file.filename.lower().endswith('.csv'): #CHECK IF IT IS CSV
                     return jsonify({"error": "Not a CSV file"}), 400
                 
                 try:
@@ -54,13 +56,13 @@ def validate():
                 except Exception as e:
                     app.logger.error(f"Error processing CSV: {str(e)}")
                     app.logger.error(traceback.format_exc())
-                    return jsonify({"error": f"Error processing CSV file: {str(e)}"}), 400
+                    return jsonify({"error": f"Error processing CSV file: {str(e)}"}), 400 #IF THERE IS ERROR PROCESSING CSV
         
-        # Checks for single domain input if no CSV file is uploaded
+        # THIS PART IS IF USER USES THE SINGLE INPUT OF EMAIL ADDRESS AND EMAIL BODY
         domain_input = request.form.get('domain', '').strip()
-        
-        if not domain_input:
-            return jsonify({"error": "No domain provided"}), 400
+        email_bodyInput = request.form.get('emailBody', '').strip()
+        if not domain_input or not email_bodyInput:
+            return jsonify({"error": "No domain or email body provided"}), 400 #ABIT REDUNDANT AND MAY CHANGE BUT THIS IS CHECK IF THERE IS VALID INPUT
         
         # Determine if input is email or domain
         if '@' in domain_input:
@@ -68,12 +70,16 @@ def validate():
         else:
             result = domain_validator.validate_domain(domain_input)
         
+        email_bodyRiskMsg = susUrlDetect(email_bodyInput) # THIS IS MY SUS URL DETECT FOR BODY RISK MSG BUT YOU MAY CHANGE TO YOUR CODE TO TRY IT OUT AND SEE IF IT WILL PRINT IN THE WEB
         result_dict = {
             "email": result.email,
             "domain": result.domain,
             "is_trusted": result.is_trusted,
-            "message": result.message
+            "message": result.message,
+            "bodyRiskMsg":email_bodyRiskMsg
         }
+
+        print(result_dict)
         
         return jsonify({
             "results": [result_dict], 

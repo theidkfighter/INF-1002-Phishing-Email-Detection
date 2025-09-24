@@ -3,11 +3,12 @@ import re
 from urllib.parse import urlparse, urljoin
 import tldextract 
 
-email_body = "asdiamsodsapcpo ajd jaspod jaspo www.facebook.com asijdia https://172.169.152.10:80 sjd ojop jsapojdasjod jasodj posaj posajpodjapos <a href='https://www.google.com'>http://yahoo.com</a> jdpoajs poajspojop ajpojsap ojpaosj doj ansdnaslkdnaklsdn https://www.yahoo.com apisojdpioas jdpoasjdpoasj dpojasp odjapos djpoasj dpoasjd poasjd poajspdo japosdjaspo https://bit.ly/123710237 ajslkdklasndkl; asndpi asndi ans idnasios dnioasn ipdoansio dnaiosd nioans dionaoisd naiosdn iaons diojaniosd nian sdi https://www.paypal.asd.verify.asdf.payme.addaccount.yes.com"
+# email_body = "asdiamsodsapcpo ajd jaspod jaspo www.facebook.com asijdia https://172.169.152.10:80 sjd ojop jsapojdasjod jasodj posaj posajpodjapos <a href='https://www.google.com'>http://yahoo.com</a> jdpoajs poajspojop ajpojsap ojpaosj doj ansdnaslkdnaklsdn https://www.yahoo.com apisojdpioas jdpoasjdpoasj dpojasp odjapos djpoasj dpoasjd poasjd poajspdo japosdjaspo https://bit.ly/123710237 ajslkdklasndkl; asndpi asndi ans idnasios dnioasn ipdoansio dnaiosd nioans dionaoisd naiosdn iaons diojaniosd nian sdi https://www.paypal.asd.verify.asdf.payme.addaccount.yes.com"
 # email_body = 'asdonaioscnioacnipascniasncisan ciopansiocnaiso cnioan cios ancoiasn cioanioa nsioc'
 
 
 def susUrlDetect(email_body):
+    riskMsg = []
     riskScore = 0
     url_pattern = r'<a\s+(?:[^>]*?\s+)?href=(["\'])(.*?)\1.*?>(.*?)<\/a>|(https?:\/\/[^\s<>]+)' #the regex to find urls 
 
@@ -41,6 +42,7 @@ def susUrlDetect(email_body):
         ip_pattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$' # regex to find ip address in url that was found in the email
         if re.match(ip_pattern, extracted_domain.domain):
             print(f"SUSPICIOUS URL: Uses IP address directly: {url}")
+            riskMsg.append(f'SUSPICIOUS URL: Uses IP address directly: {url}')
             riskScore += 20
         
         #Checking if there is <a> tag. Comparing anchor text and href url if they are pointing to the same domains
@@ -49,20 +51,17 @@ def susUrlDetect(email_body):
                 anchorDomain = tldextract.extract(anchorText).domain
                 if anchorDomain != extracted_domain and anchorDomain != '':
                     riskScore += 20
-                    print(f'SUSPICIOUS URL: Anchor text {anchorText} and the {url} extracted from the href tag is pointing to different domains')
+                    riskMsg.append(f'SUSPICIOUS URL: Anchor text {anchorText} and the {url} extracted from the href tag is pointing to different domains')
         
         
         # Checking if it uses url shortener
         if netloc in urlShort:
             riskScore += 15
-            print(f'SUSPICIOUS URL: Uses url shortener: {url}')
+            riskMsg.append(f'SUSPICIOUS URL: Uses url shortener: {url}')
             
         # Check if there is alot of subdomains
         if len(extracted_domain.subdomain.split('.')) > 3:
             riskScore += 15
-            print(f'SUSPICIOUS URL: Excessive subdomains likely meant to deceive: {url}')
+            riskMsg.append(f'SUSPICIOUS URL: Excessive subdomains likely meant to deceive: {url}')
         
-        
-    print(riskScore)
-
-susUrlDetect(email_body)
+    return riskMsg

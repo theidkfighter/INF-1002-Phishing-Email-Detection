@@ -1,6 +1,7 @@
 const singleDomainForm = document.getElementById('singleDomainForm');
 const csvForm = document.getElementById('csvForm');
 const domainInput = document.getElementById('domainInput');
+const emailBodyInput = document.getElementById('emailBodyInput')
 const csvFileInput = document.getElementById('csvFile');
 const fileInfo = document.getElementById('fileInfo');
 const csvFormat = document.getElementById('csvFormat');
@@ -100,24 +101,31 @@ function updateDomainList(domains) {
     });
 }
 
-// Handles single domain input
+// THIS IS THE PART WHERE THE USER SUBMITS THE SINGLE ITEM OF DOMAIN AND EMAIL BODY -ZQ
+/* SO BASICALLY WHEN THE USER PRESS THE BUTTON TO DETECT IT WILL GET DATA OF THE INPUT*/
 singleDomainForm.addEventListener('submit', function(e) {
     e.preventDefault();
     
     const domain = domainInput.value.trim();
-    
+    const emailBody =  emailBodyInput.value.trim() //SPLITTING BOTH THE EMAIL ADDRESS/DOMAIN AND THE EMAIL BODY INTO VARIABLES
     if (!domain) {
-        alert('Please enter a domain or email address');
+        alert('Please enter a domain or email address'); //CHECKING IF THERE IS VALID INPUTS
+        return;
+    }
+
+    if (!emailBody){
+        alert('Please enter email body!');
         return;
     }
     
     validateSingleBtn.innerHTML = '<div class="loading"></div> Validating...';
-    validateSingleBtn.disabled = true;
+    validateSingleBtn.disabled = true; //DISABLES THE BUTTON
     
-    const formData = new FormData();
-    formData.append('domain', domain);
+    const formData = new FormData(); //INITIALISING THE FORMDATA TO BE SEND TO APP.PY
+    formData.append('domain', domain); // formData = {'domain': var domain}
+    formData.append('emailBody',emailBody)// same as above
     
-    fetch('/validate', {
+    fetch('/validate', { //THIS WILL REACT WITH APP.PY TO DO THE DETECTION OF PHISHING
         method: 'POST',
         body: formData
     })
@@ -145,14 +153,15 @@ singleDomainForm.addEventListener('submit', function(e) {
     });
 });
 
-// Single Email Domain validation result
+// HERE EDITS THE RESULTS MESSAGES - ZQ
+
 function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalidCount = 0) {
     resultsSection.style.display = 'block';
     resultsTitle.textContent = 'Validation Result';
     processingProgress.innerHTML = '';
     csvResults.innerHTML = '';
-
-    let statusClass, statusIcon, statusText;
+    
+    let statusClass, statusIcon, statusText, riskMsg;
 
     if (result.is_invalid || !result.domain || result.domain === 'Invalid') {
         statusClass = 'error';
@@ -163,24 +172,30 @@ function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalid
         statusIcon = result.is_trusted ? '✅' : '⚠️';
         statusText = result.is_trusted ? 'SAFE' : 'PHISHING';
     }
+    if (result.bodyRiskMsg == []) {
+        riskMsg = ''
+    } else {
+        riskMsg = (result.bodyRiskMsg).join('\n');
+    }
     
     detectionInfo.innerHTML = `
         <div class="detection-info">
             <p>📊 <strong>Detection Summary:</strong> ${trustedCount} safe domain(s), ${phishingCount} phishing domain(s), ${invalidCount} invalid domain(s)</p>
         </div>
     `;
-    
+    //THIS DISPLAYS THE RESULTS MESSAGES
     singleResult.innerHTML = `
         <div class="result-item ${statusClass}">
             <p><strong>Email/Domain:</strong> ${result.email || 'Invalid format'}</p>
             <p><strong>Domain:</strong> ${result.domain || 'N/A'}</p>
             <p><strong>Status:</strong> ${statusIcon} ${statusText}</p>
             <p><strong>Message:</strong> ${result.message}</p>
+            <p><strong>Risk Informations:</strong>${riskMsg}</p>
         </div>
     `;
 }
 
-// Handles CSV file upload
+// THIS IS FOR THE CSV UPLOADS (ZQ HAVENT ADD IN HIS PART)
 csvForm.addEventListener('submit', function(e) {
     e.preventDefault();
     
