@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>PhishGuard</h1>
+        </header>
+        
+        <div class="input-section">
+            <div class="input-card">
+                <h2>Single Domain Check</h2>
+                <form id="singleDomainForm">
+                    <div class="form-group">
+                        <label for="domainInput">Email Domain:</label>
+                        <input type="text" id="domainInput" placeholder="user@example.com or example.com" autocomplete="off">
+                    </div>
+                    <button type="submit" id="validateSingleBtn">Validate Email Domain</button>
+                </form>
+            </div>
+            
+            <div class="input-card">
+                <h2>CSV Check</h2>
+                <p class="warning">Maximum file size: 50MB</p>
+                <form id="csvForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="csvFile">Upload CSV File:</label>
+                        <input type="file" id="csvFile" accept=".csv">
+                        <div class="file-info" id="fileInfo"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="csvFormat">Detected Headers:</label>
+                        <textarea id="csvFormat" rows="2" readonly></textarea>
+                    </div>
+                    <button type="submit" id="validateCsvBtn">Validate CSV</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="results-section" id="resultsSection">
+            <h2 id="resultsTitle">Validation Results</h2>
+            <div id="processingProgress"></div>
+            <div id="detectionInfo"></div>
+            <div id="singleResult"></div>
+            <div id="csvResults"></div>
+        </div>
+        
+        <div class="domain-list">
+            <h2>Trusted Domains</h2>
+            <div class="domains" id="domainList">
+                <span class="domain-tag">Loading domains...</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
