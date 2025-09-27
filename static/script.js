@@ -279,6 +279,7 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
                     <th>Domain</th>
                     <th>Status</th>
                     <th>Message</th>
+                    <th>Edit Distance Check</th>
                 </tr>
             </thead>
             <tbody>
@@ -303,6 +304,7 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
                 <td>${result.domain || 'Invalid'}</td>
                 <td>${statusIcon} ${statusText}</td>
                 <td>${result.message}</td>
+                <td>${(result.edit_distance && result.edit_distance.message) || ''}</td>
             </tr>
         `;
     });
@@ -330,7 +332,7 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
 
 function downloadCSVResults(results) {
     const csvContent = [
-        ['Email', 'Domain', 'Status', 'Message'],
+        ['Email', 'Domain', 'Status', 'Message', 'Edit Distance Check'],
         ...results.map(r => {
             let status;
             if (r.is_invalid || !r.domain || r.domain === 'Invalid') {
@@ -343,7 +345,8 @@ function downloadCSVResults(results) {
                 r.email || '',
                 r.domain || '',
                 status,
-                r.message || ''
+                r.message || '',
+                (r.edit_distance && r.edit_distance.message) || ''
             ];
         })
     ].map(e => e.join(',')).join('\n');

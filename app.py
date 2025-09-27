@@ -44,11 +44,30 @@ def validate():
                 try:
                     
                     results = csv_processor.process_csv_file(file, domain_validator)
+                    # Attach edit-distance result for each CSV row
+                    enhanced = []
+                    for r in results:
+                        # r is a ValidationResult dataclass
+                        try:
+                            # compute using the email if available, otherwise use domain
+                            if r.email and '@' in r.email:
+                                ed = editDistanceCheck(r.email, trusted_domains)
+                            elif r.domain:
+                                ed = editDistanceCheck(f"user@{r.domain}", trusted_domains)
+                            else:
+                                ed = {"status": "unknown", "matched": None, "message": "No sender available"}
+                        except Exception:
+                            ed = {"status": "error", "matched": None, "message": "edit-distance error"}
+
+                        rec = r.__dict__.copy()
+                        rec['edit_distance'] = ed
+                        enhanced.append(rec)
+
                     trusted_count = sum(1 for r in results if r.is_trusted)
                     phishing_count = len(results) - trusted_count
-                    
+
                     return jsonify({
-                        "results": [result.__dict__ for result in results], 
+                        "results": enhanced, 
                         "type": "csv",
                         "row_count": len(results),
                         "trusted_count": trusted_count,
