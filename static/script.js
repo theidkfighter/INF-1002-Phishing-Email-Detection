@@ -172,6 +172,7 @@ function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalid
         statusIcon = result.is_trusted ? '✅' : '⚠️';
         statusText = result.is_trusted ? 'SAFE' : 'PHISHING';
     }
+    
     if (result.bodyRiskMsg == []) {
         riskMsg = ''
     } else {
@@ -183,6 +184,15 @@ function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalid
             <p>📊 <strong>Detection Summary:</strong> ${trustedCount} safe domain(s), ${phishingCount} phishing domain(s), ${invalidCount} invalid domain(s)</p>
         </div>
     `;
+
+                // Prepare Final Risk Score info
+    let finalScore = result.final_score !== undefined ? result.final_score : 'N/A';
+    let finalLabel = result.label || 'N/A';
+    let finalRisk = result.risk_level || 'N/A';
+    let detailsList = (result.details && result.details.length > 0)
+        ? `<ul>${result.details.map(d => `<li>${d}</li>`).join('')}</ul>`
+        : 'No details available';
+
     //THIS DISPLAYS THE RESULTS MESSAGES
     singleResult.innerHTML = `
         <div class="result-item ${statusClass}">
@@ -191,6 +201,12 @@ function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalid
             <p><strong>Status:</strong> ${statusIcon} ${statusText}</p>
             <p><strong>Message:</strong> ${result.message}</p>
             <p><strong>Risk Informations:</strong>${riskMsg}</p>
+            <hr>
+            <p><strong>Final Risk Score:</strong>${finalScore}</p>
+            <p><strong>Label:</strong>${finalLabel}</p>
+            <p><strong>Risk Level:</strong>${finalRisk}</p>
+            <h4>Details:</h4>
+            ${detailsList}
         </div>
     `;
 }
@@ -278,6 +294,8 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
                     <th>Domain</th>
                     <th>Status</th>
                     <th>Message</th>
+                    <th>Final Score</th>
+                    <th>Risk Level</th>
                 </tr>
             </thead>
             <tbody>
@@ -302,6 +320,8 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
                 <td>${result.domain || 'Invalid'}</td>
                 <td>${statusIcon} ${statusText}</td>
                 <td>${result.message}</td>
+                <td>${result.final_score !== undefined ? result.final_score : 'N/A'}</td>
+                <td>${result.risk_level || 'N/A'}</td>
             </tr>
         `;
     });

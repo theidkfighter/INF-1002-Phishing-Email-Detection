@@ -7,6 +7,7 @@ from domain_manager import DomainManager
 from domain_validator import DomainValidator
 from file_processor import CSVProcessor
 from susUrlDetect import susUrlDetect
+from final_score import FinalScoreCalculator
 
 app = Flask(__name__)
 
@@ -15,6 +16,7 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 trusted_domains = DomainManager.load_trusted_domains()
 domain_validator = DomainValidator(trusted_domains)
 csv_processor = CSVProcessor()
+scorer = FinalScoreCalculator()
 
 @app.route('/')
 def index():
@@ -71,15 +73,31 @@ def validate():
             result = domain_validator.validate_domain(domain_input)
         
         email_bodyRiskMsg = susUrlDetect(email_bodyInput) # THIS IS MY SUS URL DETECT FOR BODY RISK MSG BUT YOU MAY CHANGE TO YOUR CODE TO TRY IT OUT AND SEE IF IT WILL PRINT IN THE WEB
+        
+        from final_score import FinalScoreCalculator
+        scorer = FinalScoreCalculator()
+        scoring_result = scorer.score(
+            sender_email=domain_input,
+            subject="",  # can extend later if you capture subject
+            body=email_bodyInput,
+            links=[]     # or parse links if needed
+        )
+
+        # Build result dictionary
         result_dict = {
             "email": result.email,
             "domain": result.domain,
             "is_trusted": result.is_trusted,
             "message": result.message,
-            "bodyRiskMsg":email_bodyRiskMsg
+            "bodyRiskMsg": email_bodyRiskMsg,
+            "final_score": scoring_result["score"],
+            "label": scoring_result["label"],
+            "risk_level": scoring_result["risk_level"],
+            "details": scoring_result["details"]
         }
 
-        print(result_dict)
+
+        print("DEBUG RESULT:", result_dict)
         
         return jsonify({
             "results": [result_dict], 
@@ -184,4 +202,4 @@ def internal_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=8000)
