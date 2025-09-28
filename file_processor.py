@@ -69,7 +69,7 @@ class CSVProcessor:
                 return i
         
         return None
-    
+
     @staticmethod
     def process_csv_file(file_stream, domain_validator: DomainValidator) -> List[ValidationResult]:
         
@@ -106,7 +106,7 @@ class CSVProcessor:
                     cells = line.split(',')
                 
                 cells = [cell.strip() for cell in cells]
-                
+
                 sender_email = None
                 body_email = None
                 # Try detected sender column first
@@ -118,7 +118,6 @@ class CSVProcessor:
                 if body_column_index is not None and body_column_index < len(cells): #TRY TO LOOK FOR THE EMAIL BODY COLUMN 
                     body_email = cells[body_column_index]
 
-                
                 # If no sender column detected or no email found, try all columns
                 if not sender_email:
                     for cell in cells:

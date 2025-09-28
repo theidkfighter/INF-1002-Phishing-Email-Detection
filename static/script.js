@@ -1,6 +1,7 @@
 const singleDomainForm = document.getElementById('singleDomainForm');
 const csvForm = document.getElementById('csvForm');
 const domainInput = document.getElementById('domainInput');
+const emailHeaderInput = document.getElementById('emailHeaderInput')
 const emailBodyInput = document.getElementById('emailBodyInput')
 const csvFileInput = document.getElementById('csvFile');
 const fileInfo = document.getElementById('fileInfo');
@@ -105,11 +106,18 @@ function updateDomainList(domains) {
 /* SO BASICALLY WHEN THE USER PRESS THE BUTTON TO DETECT IT WILL GET DATA OF THE INPUT*/
 singleDomainForm.addEventListener('submit', function(e) {
     e.preventDefault();
-    
+
+
     const domain = domainInput.value.trim();
+    const emailHeader = emailHeaderInput.value.trim()
     const emailBody =  emailBodyInput.value.trim() //SPLITTING BOTH THE EMAIL ADDRESS/DOMAIN AND THE EMAIL BODY INTO VARIABLES
     if (!domain) {
         alert('Please enter a domain or email address'); //CHECKING IF THERE IS VALID INPUTS
+        return;
+    }
+
+    if (!emailHeader){
+        alert("Please enter an email header");
         return;
     }
 
@@ -123,6 +131,7 @@ singleDomainForm.addEventListener('submit', function(e) {
     
     const formData = new FormData(); //INITIALISING THE FORMDATA TO BE SEND TO APP.PY
     formData.append('domain', domain); // formData = {'domain': var domain}
+    formData.append('Header',emailHeader)
     formData.append('emailBody',emailBody)// same as above
     
     fetch('/validate', { //THIS WILL REACT WITH APP.PY TO DO THE DETECTION OF PHISHING
@@ -186,10 +195,14 @@ function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalid
     `;
 
                 // Prepare Final Risk Score info
+    console.log(result);
     let finalScore = result.final_score !== undefined ? result.final_score : 'N/A';
     let finalLabel = result.label || 'N/A';
     let finalRisk = result.risk_level || 'N/A';
     let detailsList = (result.details && result.details.length > 0)
+    let keywordRiskLevel = result.keyword_risk_level
+    console.log(keywordRiskLevel)
+    let flagged_keyword = result.flagged_keyword
         ? `<ul>${result.details.map(d => `<li>${d}</li>`).join('')}</ul>`
         : 'No details available';
 
@@ -206,6 +219,8 @@ function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalid
             <p><strong>Risk Level:</strong>${finalRisk}</p>
             <h4>Details:</h4>
             ${detailsList}
+            <hr>
+            <p>keyword detection:${keywordRiskLevel} chance of phishing email</p>
         </div>
     `;
 }
@@ -283,7 +298,7 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
     
     // Displays first 100 results with an option to download full results
     const displayResults = results.slice(0, 100);
-    
+    console.log(displayResults)
     let tableHTML = `
         <div class="table-container">
         <table>

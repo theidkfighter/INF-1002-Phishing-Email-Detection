@@ -2,7 +2,7 @@ import re,csv
 from typing import Dict, List, Tuple
 
 
-def analyze_email_keywords(subject: str, body: str,
+def analyze_email_keywords(body: str,subject: str = "no header",
                            suspicious_keywords: List[str] = None,
                            subject_weight: float = 2.0,
                            early_body_weight: float = 1.5,
@@ -24,12 +24,12 @@ def analyze_email_keywords(subject: str, body: str,
 
     # Default suspicious keywords
     if suspicious_keywords is None:
-        suspicious_keywords = [
-            'urgent', 'verify', 'account', 'password', 'security',
-            'login', 'confirm', 'update', 'suspended', 'locked',
-            'action required', 'immediately', 'alert', 'warning',
-            'unauthorized', 'phishing', 'compromised', 'credentials'
-        ]
+        suspicious_keywords = []
+        csv.field_size_limit(10000000)
+        with open("spam_word_list.csv") as csvfile:
+            reader = csv.reader(csvfile)
+            for word in reader:
+                suspicious_keywords.append(word[0])
 
     # Preprocess text
     subject_lower = subject.lower()
@@ -107,15 +107,17 @@ def analyze_email_keywords(subject: str, body: str,
                     'score': late_score
                 })
 
+    outputs = {"flagged_word":[flagged_keyword.get('keyword') for flagged_keyword in results["keyword_matches"]]}
+    print(outputs)
     # Add risk assessment
-    if results['total_score'] >= 5.0:
-        results['risk_level'] = 'HIGH'
-    elif results['total_score'] >= 2.0:
-        results['risk_level'] = 'MEDIUM'
+    if results['total_score'] >= 100:
+        outputs['risk_rating'] = "high"
+    elif results['total_score'] >= 50:
+        outputs['risk_rating'] = "medium"
     else:
-        results['risk_level'] = 'LOW'
+        outputs['risk_rating'] = "low"
 
-    return results
+    return outputs
 
 
 def display_email_content(subject: str, body: str):
@@ -140,13 +142,6 @@ def highlight_keywords(text: str, keywords: List[str]) -> str:
         highlighted_text = re.sub(pattern, f'**{keyword.upper()}**', highlighted_text, flags=re.IGNORECASE)
     return highlighted_text
 
-def import_word_list(word_list = "spam_word_list.csv"):
-    word_list = []
-    csv.field_size_limit(10000000)
-    with open("spam_word_list.csv") as csvfile:
-        reader = csv.reader(csvfile)
-        for word in reader:
-            word_list.append(word[0])
 
 
 

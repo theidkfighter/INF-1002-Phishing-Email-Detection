@@ -8,6 +8,7 @@ from domain_validator import DomainValidator
 from file_processor import CSVProcessor
 from susUrlDetect import susUrlDetect
 from final_score import FinalScoreCalculator
+from detect_email_keyword import analyze_email_keywords
 
 app = Flask(__name__)
 
@@ -45,6 +46,7 @@ def validate():
                 try:
                     
                     results = csv_processor.process_csv_file(file, domain_validator)
+                    #print(results,end='\n')
                     trusted_count = sum(1 for r in results if r.is_trusted)
                     phishing_count = len(results) - trusted_count
                     
@@ -61,7 +63,9 @@ def validate():
                     return jsonify({"error": f"Error processing CSV file: {str(e)}"}), 400 #IF THERE IS ERROR PROCESSING CSV
         
         # THIS PART IS IF USER USES THE SINGLE INPUT OF EMAIL ADDRESS AND EMAIL BODY
+
         domain_input = request.form.get('domain', '').strip()
+        email_headerInput = request.form.get("Header",'').strip()
         email_bodyInput = request.form.get('emailBody', '').strip()
         if not domain_input or not email_bodyInput:
             return jsonify({"error": "No domain or email body provided"}), 400 #ABIT REDUNDANT AND MAY CHANGE BUT THIS IS CHECK IF THERE IS VALID INPUT
@@ -83,6 +87,8 @@ def validate():
             links=[]     # or parse links if needed
         )
 
+        flagged_keyword_and_risk_rating = analyze_email_keywords(email_bodyInput,email_headerInput)
+
         # Build result dictionary
         result_dict = {
             "email": result.email,
@@ -92,11 +98,13 @@ def validate():
             "bodyRiskMsg": email_bodyRiskMsg,
             "final_score": scoring_result["score"],
             "risk_level": scoring_result["risk_level"],
-            "details": scoring_result["details"]
+            "details": scoring_result["details"],
+            'flagged_keyword':flagged_keyword_and_risk_rating['flagged_word'],
+            'keyword_risk_level':flagged_keyword_and_risk_rating['risk_rating']
         }
 
 
-        print("DEBUG RESULT:", result_dict)
+        #print("DEBUG RESULT:", result_dict)
         
         return jsonify({
             "results": [result_dict], 
