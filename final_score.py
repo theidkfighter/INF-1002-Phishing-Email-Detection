@@ -2,7 +2,6 @@ import re
 from typing import List, Dict, Optional
 from difflib import SequenceMatcher
 
-#😥😥😥🙃🙃🙃Not working....
 
 class FinalScoreCalculator:
     """
@@ -10,10 +9,12 @@ class FinalScoreCalculator:
     """
 
     def __init__(self, domain_validator=None, threshold: float = 50.0):
-        
         """
         Initialize the scorer.
 
+        Args:
+            domain_validator: Instance of DomainValidator (optional).
+            threshold: Score threshold above which emails are flagged.
         """
         self.domain_validator = domain_validator
         self.threshold = threshold
@@ -87,7 +88,6 @@ class FinalScoreCalculator:
         Returns:
             dict {
                 "score": float,
-                "label": "Phishing"/"Safe",
                 "risk_level": "HIGH"/"MEDIUM"/"LOW",
                 "details": [list of reasons]
             }
@@ -162,7 +162,6 @@ class FinalScoreCalculator:
 
         # ------------------ Final aggregation ------------------
         final_score = max(0.0, min(total_points, 100.0))
-        label = "Phishing" if final_score >= self.threshold else "Safe"
 
         if final_score >= 70:
             risk_level = "HIGH"
@@ -176,7 +175,6 @@ class FinalScoreCalculator:
 
         return {
             "score": round(final_score, 2),
-            "label": label,
             "risk_level": risk_level,
             "details": details,
         }

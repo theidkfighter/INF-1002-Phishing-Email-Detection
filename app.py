@@ -91,7 +91,6 @@ def validate():
             "message": result.message,
             "bodyRiskMsg": email_bodyRiskMsg,
             "final_score": scoring_result["score"],
-            "label": scoring_result["label"],
             "risk_level": scoring_result["risk_level"],
             "details": scoring_result["details"]
         }

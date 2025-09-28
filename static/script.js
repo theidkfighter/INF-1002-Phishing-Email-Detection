@@ -203,7 +203,6 @@ function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalid
             <p><strong>Risk Informations:</strong>${riskMsg}</p>
             <hr>
             <p><strong>Final Risk Score:</strong>${finalScore}</p>
-            <p><strong>Label:</strong>${finalLabel}</p>
             <p><strong>Risk Level:</strong>${finalRisk}</p>
             <h4>Details:</h4>
             ${detailsList}
