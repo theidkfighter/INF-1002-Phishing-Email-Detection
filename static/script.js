@@ -278,14 +278,19 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
                     <th>Domain</th>
                     <th>Status</th>
                     <th>Message</th>
+                    <th>Risk Informations</th>
                 </tr>
             </thead>
             <tbody>
     `;
     
     displayResults.forEach(result => {
-        let statusClass, statusIcon, statusText;
-
+        let statusClass, statusIcon, statusText,riskInfoNice;
+        if (result.riskInfo == []) { //SEE IF THE RISK INFORMATION IS EMPTY ANOT
+            riskInfoNice = ''
+        }else {
+            riskInfoNice = result.riskInfo.join('\n');
+        }
         if (result.is_invalid || !result.domain || result.domain === 'Invalid') {
             statusClass = 'error';
             statusIcon = '❌';
@@ -302,8 +307,9 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
                 <td>${result.domain || 'Invalid'}</td>
                 <td>${statusIcon} ${statusText}</td>
                 <td>${result.message}</td>
+                <td>${riskInfoNice}</td> 
             </tr>
-        `;
+        `; //I ADDED THE RISK INFO NICE TO ADD IT INTO THE TABLE
     });
     
     tableHTML += `
@@ -329,7 +335,7 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
 
 function downloadCSVResults(results) {
     const csvContent = [
-        ['Email', 'Domain', 'Status', 'Message'],
+        ['Email', 'Domain', 'Status', 'Message','Risk Information'],
         ...results.map(r => {
             let status;
             if (r.is_invalid || !r.domain || r.domain === 'Invalid') {
@@ -342,7 +348,8 @@ function downloadCSVResults(results) {
                 r.email || '',
                 r.domain || '',
                 status,
-                r.message || ''
+                r.message || '',
+                r.riskInfo || ''
             ];
         })
     ].map(e => e.join(',')).join('\n');
