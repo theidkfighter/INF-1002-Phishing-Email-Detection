@@ -1,6 +1,7 @@
 const singleDomainForm = document.getElementById('singleDomainForm');
 const csvForm = document.getElementById('csvForm');
 const domainInput = document.getElementById('domainInput');
+const emailHeaderInput = document.getElementById('emailHeaderInput')
 const emailBodyInput = document.getElementById('emailBodyInput')
 const csvFileInput = document.getElementById('csvFile');
 const fileInfo = document.getElementById('fileInfo');
@@ -108,12 +109,22 @@ singleDomainForm.addEventListener('submit', function (e) {
 
     const domain = domainInput.value.trim();
     const emailBody = emailBodyInput.value.trim() //SPLITTING BOTH THE EMAIL ADDRESS/DOMAIN AND THE EMAIL BODY INTO VARIABLES
+
+    const domain = domainInput.value.trim();
+    const emailHeader = emailHeaderInput.value.trim()
+    const emailBody =  emailBodyInput.value.trim() //SPLITTING BOTH THE EMAIL ADDRESS/DOMAIN AND THE EMAIL BODY INTO VARIABLES
     if (!domain) {
         alert('Please enter a domain or email address'); //CHECKING IF THERE IS VALID INPUTS
         return;
     }
 
     if (!emailBody) {
+    if (!emailHeader){
+        alert("Please enter an email header");
+        return;
+    }
+
+    if (!emailBody){
         alert('Please enter email body!');
         return;
     }
@@ -125,6 +136,9 @@ singleDomainForm.addEventListener('submit', function (e) {
     formData.append('domain', domain); // formData = {'domain': var domain}
     formData.append('emailBody', emailBody)// same as above
 
+    formData.append('Header',emailHeader)
+    formData.append('emailBody',emailBody)// same as above
+    
     fetch('/validate', { //THIS WILL REACT WITH APP.PY TO DO THE DETECTION OF PHISHING
         method: 'POST',
         body: formData
@@ -172,6 +186,7 @@ function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalid
         statusIcon = result.is_trusted ? '✅' : '⚠️';
         statusText = result.is_trusted ? 'SAFE' : 'PHISHING';
     }
+    
     if (result.bodyRiskMsg == []) {
         riskMsg = ''
     } else {
@@ -183,6 +198,19 @@ function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalid
             <p>📊 <strong>Detection Summary:</strong> ${trustedCount} safe domain(s), ${phishingCount} phishing domain(s), ${invalidCount} invalid domain(s)</p>
         </div>
     `;
+
+                // Prepare Final Risk Score info
+    console.log(result);
+    let finalScore = result.final_score !== undefined ? result.final_score : 'N/A';
+    let finalLabel = result.label || 'N/A';
+    let finalRisk = result.risk_level || 'N/A';
+    let detailsList = (result.details && result.details.length > 0)
+    let keywordRiskLevel = result.keyword_risk_level
+    console.log(keywordRiskLevel)
+    let flagged_keyword = result.flagged_keyword
+        ? `<ul>${result.details.map(d => `<li>${d}</li>`).join('')}</ul>`
+        : 'No details available';
+
     //THIS DISPLAYS THE RESULTS MESSAGES
     singleResult.innerHTML = `
         <div class="result-item ${statusClass}">
@@ -192,6 +220,13 @@ function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalid
             <p><strong>Message:</strong> ${result.message}</p>
             <p><strong>Risk Informations:</strong>${riskMsg}</p>
             <p><strong>Edit Distance Check:</strong> ${(result.edit_distance && result.edit_distance.message) || ''}</p>
+            <hr>
+            <p><strong>Final Risk Score:</strong>${finalScore}</p>
+            <p><strong>Risk Level:</strong>${finalRisk}</p>
+            <h4>Details:</h4>
+            ${detailsList}
+            <hr>
+            <p>keyword detection:${keywordRiskLevel} chance of phishing email</p>
         </div>
     `;
 }
@@ -270,6 +305,7 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
     // Displays first 100 results with an option to download full results
     const displayResults = results.slice(0, 100);
 
+    console.log(displayResults)
     let tableHTML = `
         <div class="table-container">
         <table>
@@ -280,14 +316,21 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
                     <th>Status</th>
                     <th>Message</th>
                     <th>Edit Distance Check</th>
+                    <th>Risk Informations</th>
+                    <th>Final Score</th>
+                    <th>Risk Level</th>
                 </tr>
             </thead>
             <tbody>
     `;
 
     displayResults.forEach(result => {
-        let statusClass, statusIcon, statusText;
-
+        let statusClass, statusIcon, statusText,riskInfoNice;
+        if (result.riskInfo == []) { //SEE IF THE RISK INFORMATION IS EMPTY ANOT
+            riskInfoNice = ''
+        }else {
+            riskInfoNice = result.riskInfo.join('\n');
+        }
         if (result.is_invalid || !result.domain || result.domain === 'Invalid') {
             statusClass = 'error';
             statusIcon = '❌';
@@ -305,8 +348,11 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
                 <td>${statusIcon} ${statusText}</td>
                 <td>${result.message}</td>
                 <td>${(result.edit_distance && result.edit_distance.message) || ''}</td>
+                <td>${riskInfoNice}</td> 
+                <td>${result.final_score !== undefined ? result.final_score : 'N/A'}</td>
+                <td>${result.risk_level || 'N/A'}</td>
             </tr>
-        `;
+        `; //I ADDED THE RISK INFO NICE TO ADD IT INTO THE TABLE
     });
 
     tableHTML += `
@@ -333,6 +379,7 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
 function downloadCSVResults(results) {
     const csvContent = [
         ['Email', 'Domain', 'Status', 'Message', 'Edit Distance Check'],
+        ['Email', 'Domain', 'Status', 'Message','Risk Information'],
         ...results.map(r => {
             let status;
             if (r.is_invalid || !r.domain || r.domain === 'Invalid') {
@@ -347,6 +394,7 @@ function downloadCSVResults(results) {
                 status,
                 r.message || '',
                 (r.edit_distance && r.edit_distance.message) || ''
+                r.riskInfo || ''
             ];
         })
     ].map(e => e.join(',')).join('\n');

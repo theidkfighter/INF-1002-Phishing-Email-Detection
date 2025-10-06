@@ -8,6 +8,8 @@ from domain_validator import DomainValidator
 from file_processor import CSVProcessor
 from susUrlDetect import susUrlDetect
 from editDistanceCheck import editDistanceCheck
+from final_score import FinalScoreCalculator
+from detect_email_keyword import analyze_email_keywords
 
 app = Flask(__name__)
 
@@ -16,6 +18,7 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 trusted_domains = DomainManager.load_trusted_domains()
 domain_validator = DomainValidator(trusted_domains)
 csv_processor = CSVProcessor()
+scorer = FinalScoreCalculator()
 
 @app.route('/')
 def index():
@@ -63,6 +66,7 @@ def validate():
                         rec['edit_distance'] = ed
                         enhanced.append(rec)
 
+                    #print(results,end='\n')
                     trusted_count = sum(1 for r in results if r.is_trusted)
                     phishing_count = len(results) - trusted_count
 
@@ -79,7 +83,9 @@ def validate():
                     return jsonify({"error": f"Error processing CSV file: {str(e)}"}), 400 #IF THERE IS ERROR PROCESSING CSV
         
         # THIS PART IS IF USER USES THE SINGLE INPUT OF EMAIL ADDRESS AND EMAIL BODY
+
         domain_input = request.form.get('domain', '').strip()
+        email_headerInput = request.form.get("Header",'').strip()
         email_bodyInput = request.form.get('emailBody', '').strip()
         if not domain_input or not email_bodyInput:
             return jsonify({"error": "No domain or email body provided"}), 400 #ABIT REDUNDANT AND MAY CHANGE BUT THIS IS CHECK IF THERE IS VALID INPUT
@@ -97,6 +103,19 @@ def validate():
             edit_distance_result = editDistanceCheck(f"user@{domain_input}", trusted_domains)
 
         email_bodyRiskMsg = susUrlDetect(email_bodyInput) # THIS IS MY SUS URL DETECT FOR BODY RISK MSG BUT YOU MAY CHANGE TO YOUR CODE TO TRY IT OUT AND SEE IF IT WILL PRINT IN THE WEB
+        
+        from final_score import FinalScoreCalculator
+        scorer = FinalScoreCalculator()
+        scoring_result = scorer.score(
+            sender_email=domain_input,
+            subject="",  # can extend later if you capture subject
+            body=email_bodyInput,
+            links=[]     # or parse links if needed
+        )
+
+        flagged_keyword_and_risk_rating = analyze_email_keywords(email_bodyInput,email_headerInput)
+
+        # Build result dictionary
         result_dict = {
             "email": result.email,
             "domain": result.domain,
@@ -104,9 +123,15 @@ def validate():
             "message": result.message,
             "bodyRiskMsg": email_bodyRiskMsg,
             "edit_distance": edit_distance_result
+            "final_score": scoring_result["score"],
+            "risk_level": scoring_result["risk_level"],
+            "details": scoring_result["details"],
+            'flagged_keyword':flagged_keyword_and_risk_rating['flagged_word'],
+            'keyword_risk_level':flagged_keyword_and_risk_rating['risk_rating']
         }
 
-        print(result_dict)
+
+        #print("DEBUG RESULT:", result_dict)
         
         return jsonify({
             "results": [result_dict], 
@@ -211,4 +236,4 @@ def internal_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=8000)

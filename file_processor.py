@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from models import ValidationResult
 from domain_validator import DomainValidator
+from susUrlDetect import susUrlDetect
 
 class CSVProcessor:
     
@@ -59,10 +60,20 @@ class CSVProcessor:
         return email_pattern.findall(text)
     
     @staticmethod
+    def detect_body_column(headers):
+        body_keywords = ['email body', 'body', ' message', 'content']
+        
+        for i,header in enumerate(headers):
+            header_lower = header.lower()
+            if any(keyword in header_lower for keyword in body_keywords):
+                return i
+        
+        return None
+
+    @staticmethod
     def process_csv_file(file_stream, domain_validator: DomainValidator) -> List[ValidationResult]:
         
         try:
-    
             content = file_stream.read().decode('utf-8')
             lines = content.split('\n')
             
@@ -81,10 +92,10 @@ class CSVProcessor:
                 
                 headers = [header.strip() for header in headers if header.strip()]
                 sender_column_index = CSVProcessor.detect_sender_column(headers)
-            
+                body_column_index = CSVProcessor.detect_body_column(headers) #LOOKING FOR THE INDEX OF THE COLUMN EXTRACTED FROM THE CSV
             start_line = 1 if headers else 0  # Skips header row if headers exist
             
-            for i in range(start_line, len(lines)):
+            for i in range(start_line, len(lines)): #FOR EVERY LINE READ AFTER THE HEADERS LINE IT WILL RUN THE PROGRAM TO DETECT STUFF
                 line = lines[i].strip()
                 if not line:
                     continue
@@ -95,15 +106,18 @@ class CSVProcessor:
                     cells = line.split(',')
                 
                 cells = [cell.strip() for cell in cells]
-                
+
                 sender_email = None
-                
+                body_email = None
                 # Try detected sender column first
                 if sender_column_index is not None and sender_column_index < len(cells):
                     email_candidates = CSVProcessor.extract_emails_from_text(cells[sender_column_index])
                     if email_candidates:
                         sender_email = email_candidates[0]
-                
+                        
+                if body_column_index is not None and body_column_index < len(cells): #TRY TO LOOK FOR THE EMAIL BODY COLUMN 
+                    body_email = cells[body_column_index]
+
                 # If no sender column detected or no email found, try all columns
                 if not sender_email:
                     for cell in cells:
@@ -122,8 +136,11 @@ class CSVProcessor:
                 if sender_email:
                     validation_result = domain_validator.validate_email(sender_email)
                     validation_result.original_data = {"line": line}
-                    results.append(validation_result)
-            
+                    
+                    
+                if body_email and sender_email: #TO CHECK IF SENDER EMAIL IS IN IF NOT IT WILL NOT RUN AND GIVE ERROR
+                    validation_result.riskInfo = susUrlDetect(body_email) #SO HERE I ADDED A DATA CLASS IN MODEL.PY SO IT WILL ADD MY RESULTS IN TO THE VALIDATION RESULT DATA CLASS
+                    results.append(validation_result) #THIS WILL APPEND THE DATA CLASS INTO RESULTS
             return results
         except Exception as e:
             raise ValueError(f"Error processing CSV file: {str(e)}")

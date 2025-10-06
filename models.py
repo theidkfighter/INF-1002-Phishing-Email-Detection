@@ -1,6 +1,6 @@
 
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 @dataclass
 class ValidationResult:
@@ -10,6 +10,7 @@ class ValidationResult:
     is_trusted: bool
     message: str
     original_data: Dict[str, Any] = field(default_factory=dict)
+    riskInfo: List[str] = field(default_factory=list)
 
 @dataclass
 class ValidationRequest:
