@@ -6,6 +6,7 @@ from typing import List, Optional
 from models import ValidationResult
 from domain_validator import DomainValidator
 from susUrlDetect import susUrlDetect
+from detect_email_keyword import analyze_email_keywords
 
 class CSVProcessor:
     
@@ -78,7 +79,7 @@ class CSVProcessor:
             lines = content.split('\n')
             
             results = []
-            
+            #print(lines)
             # Detects headers and sender column
             headers = None
             sender_column_index = None
@@ -106,7 +107,6 @@ class CSVProcessor:
                     cells = line.split(',')
                 
                 cells = [cell.strip() for cell in cells]
-
                 sender_email = None
                 body_email = None
                 # Try detected sender column first
@@ -116,12 +116,13 @@ class CSVProcessor:
                         sender_email = email_candidates[0]
                         
                 if body_column_index is not None and body_column_index < len(cells): #TRY TO LOOK FOR THE EMAIL BODY COLUMN 
-                    body_email = cells[body_column_index]
+                    body_subject_email = cells[body_column_index]
+                    body_content_email = " ".join(cells[body_column_index:len(body_subject_email) + body_column_index])
 
                 # If no sender column detected or no email found, try all columns
                 if not sender_email:
                     for cell in cells:
-                        email_candidates = CSVProcessor.extract_emails_from_text(cell)
+                        email_candidates = CSVProcessor.extract_emails_from_text(cell)#
                         if email_candidates:
                             sender_email = email_candidates[0]
                             break
@@ -138,8 +139,10 @@ class CSVProcessor:
                     validation_result.original_data = {"line": line}
                     
                     
-                if body_email and sender_email: #TO CHECK IF SENDER EMAIL IS IN IF NOT IT WILL NOT RUN AND GIVE ERROR
-                    validation_result.riskInfo = susUrlDetect(body_email) #SO HERE I ADDED A DATA CLASS IN MODEL.PY SO IT WILL ADD MY RESULTS IN TO THE VALIDATION RESULT DATA CLASS
+                if body_subject_email and sender_email: #TO CHECK IF SENDER EMAIL IS IN IF NOT IT WILL NOT RUN AND GIVE ERROR
+                    validation_result.riskInfo = susUrlDetect(body_subject_email) #SO HERE I ADDED A DATA CLASS IN MODEL.PY SO IT WILL ADD MY RESULTS IN TO THE VALIDATION RESULT DATA CLASS
+                    validation_result.keyword_risk_rating = analyze_email_keywords(body_content_email,subject = body_subject_email)["risk_rating"]
+                    
                     results.append(validation_result) #THIS WILL APPEND THE DATA CLASS INTO RESULTS
             return results
         except Exception as e:

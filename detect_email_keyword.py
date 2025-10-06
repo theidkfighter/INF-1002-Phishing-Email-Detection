@@ -34,7 +34,7 @@ def analyze_email_keywords(body: str,subject: str = "no header",
     # Preprocess text
     subject_lower = subject.lower()
     body_lower = body.lower()
-
+  
     # Split body into words for early detection
     body_words = re.findall(r'\b\w+\b', body_lower)
     total_body_words = len(body_words)
@@ -93,6 +93,8 @@ def analyze_email_keywords(body: str,subject: str = "no header",
             results['body_score'] += early_score + late_score
             results['total_score'] += early_score + late_score
 
+
+
             if early_matches > 0:
                 results['early_body_matches'].append({
                     'keyword': keyword,
@@ -108,7 +110,8 @@ def analyze_email_keywords(body: str,subject: str = "no header",
                 })
 
     outputs = {"flagged_word":[flagged_keyword.get('keyword') for flagged_keyword in results["keyword_matches"]]}
-    print(outputs)
+    
+    #print(outputs)
     # Add risk assessment
     if results['total_score'] >= 100:
         outputs['risk_rating'] = "high"

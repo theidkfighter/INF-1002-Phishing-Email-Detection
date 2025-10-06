@@ -46,7 +46,7 @@ def validate():
                 try:
                     
                     results = csv_processor.process_csv_file(file, domain_validator)
-                    #print(results,end='\n')
+                    
                     trusted_count = sum(1 for r in results if r.is_trusted)
                     phishing_count = len(results) - trusted_count
                     

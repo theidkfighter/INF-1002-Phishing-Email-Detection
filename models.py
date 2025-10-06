@@ -11,6 +11,7 @@ class ValidationResult:
     message: str
     original_data: Dict[str, Any] = field(default_factory=dict)
     riskInfo: List[str] = field(default_factory=list)
+    keyword_risk_rating: str = "None"
 
 @dataclass
 class ValidationRequest:

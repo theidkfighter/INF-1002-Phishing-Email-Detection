@@ -203,8 +203,10 @@ function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalid
     let keywordRiskLevel = result.keyword_risk_level
     console.log(keywordRiskLevel)
     let flagged_keyword = result.flagged_keyword
-        ? `<ul>${result.details.map(d => `<li>${d}</li>`).join('')}</ul>`
+        ? `<ul>${result.flagged_keyword.map(d => `<li>${d}</li>`).join('')}</ul>`
         : 'No details available';
+
+    console.log(result.flagged_keyword);
 
     //THIS DISPLAYS THE RESULTS MESSAGES
     singleResult.innerHTML = `
@@ -221,6 +223,8 @@ function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalid
             ${detailsList}
             <hr>
             <p>keyword detection:${keywordRiskLevel} chance of phishing email</p>
+            ${flagged_keyword}
+
         </div>
     `;
 }
@@ -311,6 +315,7 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
                     <th>Risk Informations</th>
                     <th>Final Score</th>
                     <th>Risk Level</th>
+                    <th>key word risk level</th>
                 </tr>
             </thead>
             <tbody>
@@ -342,6 +347,7 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
                 <td>${riskInfoNice}</td> 
                 <td>${result.final_score !== undefined ? result.final_score : 'N/A'}</td>
                 <td>${result.risk_level || 'N/A'}</td>
+                <td>${result["keyword_risk_rating"]}</td>
             </tr>
         `; //I ADDED THE RISK INFO NICE TO ADD IT INTO THE TABLE
     });
