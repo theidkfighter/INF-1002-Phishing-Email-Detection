@@ -1,0 +1,11 @@
+timestamp,email,domain,status,matched,message
+"2025-09-24T14:53:34.550102","hi@ghmail.com","ghmail.com","suspicious","gmail.com","Suspicious Domain: ghmail.com (Similar to gmail.com)"
+"2025-09-24T14:56:01.105235","hi@gmail.com","gmail.com","trusted","gmail.com",""
+"2025-09-24T14:56:05.984953","hi@ggmail.com","ggmail.com","suspicious","gmail.com","Suspicious Domain: ggmail.com (Similar to gmail.com)"
+"2025-09-24T14:56:14.455093","hi@gdfgdfgdfg.com","gdfgdfgdfg.com","unknown","","Unknown Domain: gdfgdfgdfg.com not in whitelist"
+"2025-09-24T14:56:39.317833","hi@gmail.com","gmail.com","trusted","gmail.com",""
+"2025-09-24T15:00:16.544357","hi@gmail.com","gmail.com","trusted","gmail.com","Domain is trusted"
+"2025-09-24T15:00:22.725165","hi@ggmail.com","ggmail.com","suspicious","gmail.com","Suspicious Domain: ggmail.com (Similar to gmail.com)"
+"2025-09-24T15:00:29.711540","hi@ggsdgsdg.com","ggsdgsdg.com","unknown","","Unknown Domain: ggsdgsdg.com not in whitelist"
+"2025-09-24T15:00:37.642088","hi@ggmail.com","ggmail.com","suspicious","gmail.com","Suspicious Domain: ggmail.com (Similar to gmail.com)"
+"2025-09-24T15:05:43.972112","hi@ggmail.com","ggmail.com","suspicious","gmail.com","Suspicious Domain: ggmail.com (Similar to gmail.com)"

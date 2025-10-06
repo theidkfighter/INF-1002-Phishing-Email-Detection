@@ -9,6 +9,7 @@ from file_processor import CSVProcessor
 from susUrlDetect import susUrlDetect
 from final_score import FinalScoreCalculator
 from detect_email_keyword import analyze_email_keywords
+from editDistanceCheck import editDistanceCheck
 
 app = Flask(__name__)
 
@@ -46,12 +47,30 @@ def validate():
                 try:
                     
                     results = csv_processor.process_csv_file(file, domain_validator)
-                    
+                    # Attach edit-distance result for each CSV row
+                    enhanced = []
+                    for r in results:
+                        # r is a ValidationResult dataclass
+                        try:
+                            # compute using the email if available, otherwise use domain
+                            if r.email and '@' in r.email:
+                                ed = editDistanceCheck(r.email, trusted_domains)
+                            elif r.domain:
+                                ed = editDistanceCheck(f"user@{r.domain}", trusted_domains)
+                            else:
+                                ed = {"status": "unknown", "matched": None, "message": "No sender available"}
+                        except Exception:
+                            ed = {"status": "error", "matched": None, "message": "edit-distance error"}
+
+                        rec = r.__dict__.copy()
+                        rec['edit_distance'] = ed
+                        enhanced.append(rec)
+
                     trusted_count = sum(1 for r in results if r.is_trusted)
                     phishing_count = len(results) - trusted_count
-                    
+
                     return jsonify({
-                        "results": [result.__dict__ for result in results], 
+                        "results": enhanced, 
                         "type": "csv",
                         "row_count": len(results),
                         "trusted_count": trusted_count,
@@ -76,6 +95,12 @@ def validate():
         else:
             result = domain_validator.validate_domain(domain_input)
         
+        # Runs edit distance check
+        if '@' in domain_input:
+            edit_distance_result = editDistanceCheck(domain_input, trusted_domains)
+        else:
+            edit_distance_result = editDistanceCheck(f"user@{domain_input}", trusted_domains)
+
         email_bodyRiskMsg = susUrlDetect(email_bodyInput) # THIS IS MY SUS URL DETECT FOR BODY RISK MSG BUT YOU MAY CHANGE TO YOUR CODE TO TRY IT OUT AND SEE IF IT WILL PRINT IN THE WEB
         
         from final_score import FinalScoreCalculator
@@ -100,7 +125,8 @@ def validate():
             "risk_level": scoring_result["risk_level"],
             "details": scoring_result["details"],
             'flagged_keyword':flagged_keyword_and_risk_rating['flagged_word'],
-            'keyword_risk_level':flagged_keyword_and_risk_rating['risk_rating']
+            'keyword_risk_level':flagged_keyword_and_risk_rating['risk_rating'],
+            "edit_distance": edit_distance_result
         }
 
 
