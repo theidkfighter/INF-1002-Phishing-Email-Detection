@@ -2,6 +2,7 @@
 import csv
 import re
 from typing import List, Optional
+from io import StringIO
 
 from models import ValidationResult
 from domain_validator import DomainValidator
@@ -73,10 +74,23 @@ class CSVProcessor:
         return None
 
     @staticmethod
+    def detect_subject_column(headers):
+        body_keywords = ['subject']
+
+        for i, header in enumerate(headers):
+            header_lower = header.lower()
+            if any(keyword in header_lower for keyword in body_keywords):
+                return i
+
+        return None
+
+    @staticmethod
     def process_csv_file(file_stream, domain_validator: DomainValidator) -> List[ValidationResult]:
         
         try:
+
             content = file_stream.read().decode('utf-8')
+            #print(content)
             lines = content.split('\n')
 
             results = []
@@ -94,20 +108,22 @@ class CSVProcessor:
                 headers = [header.strip() for header in headers if header.strip()]
                 sender_column_index = CSVProcessor.detect_sender_column(headers)
                 body_column_index = CSVProcessor.detect_body_column(headers) #LOOKING FOR THE INDEX OF THE COLUMN EXTRACTED FROM THE CSV
+                subject_column_index = CSVProcessor.detect_subject_column(headers) #find the index for the subject column
             start_line = 1 if headers else 0  # Skips header row if headers exist
             # print(len(lines))
             for i in range(start_line, len(lines)): #FOR EVERY LINE READ AFTER THE HEADERS LINE IT WILL RUN THE PROGRAM TO DETECT STUFF
                 line = lines[i].strip()
+
                 if not line:
                     continue
                 
                 if '\t' in line:
                     cells = line.split('\t')
                 else:
-                    cells = line.split(',')
-                
+                    cells = csv.reader(StringIO(line))
+                    cells = next(cells)
+
                 cells = [cell.strip() for cell in cells]
-                print(cells)
                 sender_email = None
                 body_email = None
                 # Try detected sender column first
@@ -117,8 +133,11 @@ class CSVProcessor:
                         sender_email = email_candidates[0]
                         
                 if body_column_index is not None and body_column_index < len(cells): #TRY TO LOOK FOR THE EMAIL BODY COLUMN 
-                    body_subject_email = cells[body_column_index]
-                    body_content_email = " ".join(cells[body_column_index:len(body_subject_email) + body_column_index])
+                    body_content_email = cells[body_column_index]
+                    body_subject_email = cells[subject_column_index]
+
+                    print(body_subject_email)
+                    print(body_content_email)
 
                 # If no sender column detected or no email found, try all columns
                 if not sender_email:
@@ -147,13 +166,13 @@ class CSVProcessor:
                     validation_result.riskLevel = FinalScoreCalculator().score(
                         riskIndex
                     )   
-                    print(i,body_content_email,body_subject_email,validation_result.riskLevel) 
+                    #print(i,body_content_email,body_subject_email,validation_result.riskLevel)
                 elif sender_email:
                     riskIndex = susUrlDetect(body_subject_email)["riskScore"] + analyze_email_keywords(body_content_email,subject = body_subject_email)["riskScore"]
                     validation_result.riskLevel = FinalScoreCalculator().score(
                         riskIndex
                     )   
-                    print(i,body_content_email,body_subject_email,validation_result.riskLevel)  
+                    #print(i,body_content_email,body_subject_email,validation_result.riskLevel)
                 # print(len(results))
                 results.append(validation_result) #THIS WILL APPEND THE DATA CLASS INTO RESULTS
             return results
