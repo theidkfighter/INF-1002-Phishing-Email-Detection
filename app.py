@@ -58,14 +58,17 @@ def validate():
                             elif r.domain:
                                 ed = editDistanceCheck(f"user@{r.domain}", trusted_domains)
                             else:
-                                ed = {"status": "unknown", "matched": None, "message": "No sender available"}
+                                ed = {"status": "unknown", "matched": None, "message": "No sender available", "riskScore": 0}
                         except Exception:
-                            ed = {"status": "error", "matched": None, "message": "edit-distance error"}
+                            ed = {"status": "error", "matched": None, "message": "edit-distance error", "riskScore": 0}
 
                         rec = r.__dict__.copy()
+                        rec["riskLevel"] = scorer.score(
+                            ed["riskScore"]
+                        )
                         rec['edit_distance'] = ed
                         enhanced.append(rec)
-
+                    # print(len(enhanced))
                     trusted_count = sum(1 for r in results if r.is_trusted)
                     phishing_count = len(results) - trusted_count
 
@@ -109,8 +112,7 @@ def validate():
 
 
         riskIndex = email_bodyRiskMsg["riskScore"] + edit_distance_result["riskScore"]+ flagged_keyword_and_risk_rating["riskScore"]
-        from final_score import FinalScoreCalculator
-        scorer = FinalScoreCalculator()
+
         scoring_result = scorer.score(
             riskIndex
         )

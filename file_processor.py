@@ -78,9 +78,8 @@ class CSVProcessor:
         try:
             content = file_stream.read().decode('utf-8')
             lines = content.split('\n')
-            
+
             results = []
-            #print(lines)
             # Detects headers and sender column
             headers = None
             sender_column_index = None
@@ -96,7 +95,7 @@ class CSVProcessor:
                 sender_column_index = CSVProcessor.detect_sender_column(headers)
                 body_column_index = CSVProcessor.detect_body_column(headers) #LOOKING FOR THE INDEX OF THE COLUMN EXTRACTED FROM THE CSV
             start_line = 1 if headers else 0  # Skips header row if headers exist
-            
+            # print(len(lines))
             for i in range(start_line, len(lines)): #FOR EVERY LINE READ AFTER THE HEADERS LINE IT WILL RUN THE PROGRAM TO DETECT STUFF
                 line = lines[i].strip()
                 if not line:
@@ -108,6 +107,7 @@ class CSVProcessor:
                     cells = line.split(',')
                 
                 cells = [cell.strip() for cell in cells]
+                print(cells)
                 sender_email = None
                 body_email = None
                 # Try detected sender column first
@@ -143,12 +143,18 @@ class CSVProcessor:
                 if body_subject_email and sender_email: #TO CHECK IF SENDER EMAIL IS IN IF NOT IT WILL NOT RUN AND GIVE ERROR
                     validation_result.riskInfo = susUrlDetect(body_subject_email) #SO HERE I ADDED A DATA CLASS IN MODEL.PY SO IT WILL ADD MY RESULTS IN TO THE VALIDATION RESULT DATA CLASS
                     validation_result.keyword_risk_rating = analyze_email_keywords(body_content_email,subject = body_subject_email)["risk_rating"]
-                    riskIndex = susUrlDetect(body_subject_email)["riskScore"]
-                    print(riskIndex)
+                    riskIndex = susUrlDetect(body_subject_email)["riskScore"] + analyze_email_keywords(body_content_email,subject = body_subject_email)["riskScore"]
                     validation_result.riskLevel = FinalScoreCalculator().score(
                         riskIndex
                     )   
-                print(validation_result)
+                    print(i,body_content_email,body_subject_email,validation_result.riskLevel) 
+                elif sender_email:
+                    riskIndex = susUrlDetect(body_subject_email)["riskScore"] + analyze_email_keywords(body_content_email,subject = body_subject_email)["riskScore"]
+                    validation_result.riskLevel = FinalScoreCalculator().score(
+                        riskIndex
+                    )   
+                    print(i,body_content_email,body_subject_email,validation_result.riskLevel)  
+                # print(len(results))
                 results.append(validation_result) #THIS WILL APPEND THE DATA CLASS INTO RESULTS
             return results
         except Exception as e:
