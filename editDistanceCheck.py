@@ -24,28 +24,29 @@ def loadCSV(csvPath, column_name="name column thing"):
 
 def editDistanceCheck(senderEmail, safeDomains):
     senderDomain = senderEmail.split("@")[-1].lower() if "@" in senderEmail else ""
-
+    riskScore = 0
     # suspicious is close match, unknown is totally no close matches in the list
     match = difflib.get_close_matches(senderDomain, safeDomains, n=1, cutoff=0.75)
     if match and match[0] != senderDomain:
         status = "suspicious"
         matched = match[0]
+        riskScore += 1
         message = f"Suspicious Domain: {senderDomain} (Similar to {matched})"
-        print(message)
-        return {"status": status, "matched": matched, "message": message}
+        return {"status": status, "matched": matched, "message": message, "riskScore":riskScore}
 
     elif senderDomain not in safeDomains:
         status = "unknown"
         matched = None
         message = f"Unknown Domain: {senderDomain} not in whitelist"
-        print(message)
-        return {"status": status, "matched": matched, "message": message}
+        riskScore += 1
+
+        return {"status": status, "matched": matched, "message": message,"riskScore":riskScore}
 
     else:
         status = "trusted"
         matched = senderDomain
         message = "Domain is trusted"
-        return {"status": status, "matched": matched, "message": message}
+        return {"status": status, "matched": matched, "message": message,"riskScore":0}
 
 trustableEmailDomains = loadWhitelist("trustable_email_domains.txt")
 

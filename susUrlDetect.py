@@ -8,7 +8,7 @@ import tldextract
 
 
 def susUrlDetect(email_body):
-    riskMsg = []
+    result = {'riskMsg':[],"riskScore":0}
     riskScore = 0
     url_pattern = r'<a\s+(?:[^>]*?\s+)?href=(["\'])(.*?)\1.*?>(.*?)<\/a>|(https?:\/\/[^\s<>]+)' #the regex to find urls 
 
@@ -41,27 +41,26 @@ def susUrlDetect(email_body):
         #IP Detection
         ip_pattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$' # regex to find ip address in url that was found in the email
         if re.match(ip_pattern, extracted_domain.domain):
-            print(f"SUSPICIOUS URL: Uses IP address directly: {url}")
-            riskMsg.append(f'SUSPICIOUS URL: Uses IP address directly: {url}')
-            riskScore += 20
+            result['riskMsg'].append(f'SUSPICIOUS URL: Uses IP address directly: {url}')
+            riskScore += 1
         
         #Checking if there is <a> tag. Comparing anchor text and href url if they are pointing to the same domains
         if anchorText:
             if 'http' or 'https' in anchorText:
                 anchorDomain = tldextract.extract(anchorText).domain
                 if anchorDomain != extracted_domain and anchorDomain != '':
-                    riskScore += 20
-                    riskMsg.append(f'SUSPICIOUS URL: Anchor text {anchorText} and the {url} extracted from the href tag is pointing to different domains')
+                    riskScore += 1
+                    result['riskMsg'].append(f'SUSPICIOUS URL: Anchor text {anchorText} and the {url} extracted from the href tag is pointing to different domains')
         
         
         # Checking if it uses url shortener
         if netloc in urlShort:
-            riskScore += 15
-            riskMsg.append(f'SUSPICIOUS URL: Uses url shortener: {url}')
+            riskScore += 1
+            result['riskMsg'].append(f'SUSPICIOUS URL: Uses url shortener: {url}')
             
         # Check if there is alot of subdomains
         if len(extracted_domain.subdomain.split('.')) > 3:
-            riskScore += 15
-            riskMsg.append(f'SUSPICIOUS URL: Excessive subdomains likely meant to deceive: {url}')
-        
-    return riskMsg
+            riskScore += 1
+            result['riskMsg'].append(f'SUSPICIOUS URL: Excessive subdomains likely meant to deceive: {url}')
+        result['riskScore'] = riskScore
+    return result

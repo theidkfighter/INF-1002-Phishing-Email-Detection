@@ -7,6 +7,7 @@ from models import ValidationResult
 from domain_validator import DomainValidator
 from susUrlDetect import susUrlDetect
 from detect_email_keyword import analyze_email_keywords
+from final_score import FinalScoreCalculator
 
 class CSVProcessor:
     
@@ -142,8 +143,13 @@ class CSVProcessor:
                 if body_subject_email and sender_email: #TO CHECK IF SENDER EMAIL IS IN IF NOT IT WILL NOT RUN AND GIVE ERROR
                     validation_result.riskInfo = susUrlDetect(body_subject_email) #SO HERE I ADDED A DATA CLASS IN MODEL.PY SO IT WILL ADD MY RESULTS IN TO THE VALIDATION RESULT DATA CLASS
                     validation_result.keyword_risk_rating = analyze_email_keywords(body_content_email,subject = body_subject_email)["risk_rating"]
-                    
-                    results.append(validation_result) #THIS WILL APPEND THE DATA CLASS INTO RESULTS
+                    riskIndex = susUrlDetect(body_subject_email)["riskScore"]
+                    print(riskIndex)
+                    validation_result.riskLevel = FinalScoreCalculator().score(
+                        riskIndex
+                    )   
+                print(validation_result)
+                results.append(validation_result) #THIS WILL APPEND THE DATA CLASS INTO RESULTS
             return results
         except Exception as e:
             raise ValueError(f"Error processing CSV file: {str(e)}")

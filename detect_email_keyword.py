@@ -109,14 +109,16 @@ def analyze_email_keywords(body: str,subject: str = "no header",
                     'score': late_score
                 })
 
-    outputs = {"flagged_word":[flagged_keyword.get('keyword') for flagged_keyword in results["keyword_matches"]]}
+    outputs = {"flagged_word":[flagged_keyword.get('keyword') for flagged_keyword in results["keyword_matches"]],"riskScore":0}
     
     #print(outputs)
     # Add risk assessment
     if results['total_score'] >= 100:
         outputs['risk_rating'] = "high"
+        outputs['riskScore'] += 1
     elif results['total_score'] >= 50:
         outputs['risk_rating'] = "medium"
+        outputs['riskScore'] += 1
     else:
         outputs['risk_rating'] = "low"
 

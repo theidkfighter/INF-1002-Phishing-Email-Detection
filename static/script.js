@@ -209,12 +209,9 @@ function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalid
             <p><strong>Message:</strong> ${result.message}</p>
             <p><strong>Risk Informations:</strong>${riskMsg}</p>
             <hr>
-            <p><strong>Final Risk Score:</strong>${finalScore}</p>
             <p><strong>Risk Level:</strong>${finalRisk}</p>
-            <h4>Details:</h4>
-            ${detailsList}
             <hr>
-            <p>keyword detection:${keywordRiskLevel} chance of phishing email</p>
+            <p>Keyword detection: ${keywordRiskLevel} chance of phishing email</p>
             ${flagged_keyword}
 
             <p><strong>Edit Distance Check:</strong> ${(result.edit_distance && result.edit_distance.message) || ''}</p>
@@ -303,14 +300,8 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
             <thead>
                 <tr>
                     <th>Email</th>
-                    <th>Domain</th>
-                    <th>Status</th>
-                    <th>Message</th>
                     <th>Risk Informations</th>
-                    <th>Final Score</th>
                     <th>Risk Level</th>
-                    <th>key word risk level</th>
-                    <th>Edit Distance Check</th>
                 </tr>
             </thead>
             <tbody>
@@ -321,7 +312,7 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
         if (result.riskInfo == []) { //SEE IF THE RISK INFORMATION IS EMPTY ANOT
             riskInfoNice = ''
         }else {
-            riskInfoNice = result.riskInfo.join('\n');
+            riskInfoNice = result.riskInfo["riskMsg"].join('\n');
         }
         if (result.is_invalid || !result.domain || result.domain === 'Invalid') {
             statusClass = 'error';
@@ -336,14 +327,8 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
         tableHTML += `
             <tr class="${statusClass}">
                 <td>${result.email || 'N/A'}</td>
-                <td>${result.domain || 'Invalid'}</td>
-                <td>${statusIcon} ${statusText}</td>
-                <td>${result.message}</td>
                 <td>${riskInfoNice}</td> 
-                <td>${result.final_score !== undefined ? result.final_score : 'N/A'}</td>
-                <td>${result.risk_level || 'N/A'}</td>
-                <td>${result["keyword_risk_rating"]}</td>
-                <td>${(result.edit_distance && result.edit_distance.message) || ''}</td>
+                <td>${result.riskLevel["risk_level"] || 'N/A'}</td>
             </tr>
         `; //I ADDED THE RISK INFO NICE TO ADD IT INTO THE TABLE
     });

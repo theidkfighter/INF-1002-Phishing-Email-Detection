@@ -103,27 +103,25 @@ def validate():
 
         email_bodyRiskMsg = susUrlDetect(email_bodyInput) # THIS IS MY SUS URL DETECT FOR BODY RISK MSG BUT YOU MAY CHANGE TO YOUR CODE TO TRY IT OUT AND SEE IF IT WILL PRINT IN THE WEB
         
-        from final_score import FinalScoreCalculator
-        scorer = FinalScoreCalculator()
-        scoring_result = scorer.score(
-            sender_email=domain_input,
-            subject="",  # can extend later if you capture subject
-            body=email_bodyInput,
-            links=[]     # or parse links if needed
-        )
+
 
         flagged_keyword_and_risk_rating = analyze_email_keywords(email_bodyInput,email_headerInput)
 
+
+        riskIndex = email_bodyRiskMsg["riskScore"] + edit_distance_result["riskScore"]+ flagged_keyword_and_risk_rating["riskScore"]
+        from final_score import FinalScoreCalculator
+        scorer = FinalScoreCalculator()
+        scoring_result = scorer.score(
+            riskIndex
+        )
         # Build result dictionary
         result_dict = {
             "email": result.email,
             "domain": result.domain,
             "is_trusted": result.is_trusted,
             "message": result.message,
-            "bodyRiskMsg": email_bodyRiskMsg,
-            "final_score": scoring_result["score"],
+            "bodyRiskMsg": email_bodyRiskMsg["riskMsg"],
             "risk_level": scoring_result["risk_level"],
-            "details": scoring_result["details"],
             'flagged_keyword':flagged_keyword_and_risk_rating['flagged_word'],
             'keyword_risk_level':flagged_keyword_and_risk_rating['risk_rating'],
             "edit_distance": edit_distance_result
