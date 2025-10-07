@@ -63,9 +63,13 @@ def validate():
                             ed = {"status": "error", "matched": None, "message": "edit-distance error", "riskScore": 0}
 
                         rec = r.__dict__.copy()
-                        rec["riskLevel"] = scorer.score(
-                            ed["riskScore"]
-                        )
+                        # print(rec["riskLevel"])
+                        # print(ed["riskScore"])
+                        if rec["riskLevel"] == "SAFE": #if it was already detected as PHISHING then it wont run the scorer again
+                            rec["riskLevel"] = scorer.score(
+                                ed["riskScore"]
+                            )
+                            print(rec["riskLevel"])
                         rec['edit_distance'] = ed
                         enhanced.append(rec)
                     # print(len(enhanced))

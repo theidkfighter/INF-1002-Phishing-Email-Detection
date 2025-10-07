@@ -107,7 +107,7 @@ class CSVProcessor:
                     cells = line.split(',')
                 
                 cells = [cell.strip() for cell in cells]
-                print(cells)
+                # print(cells)
                 sender_email = None
                 body_email = None
                 # Try detected sender column first
@@ -147,13 +147,13 @@ class CSVProcessor:
                     validation_result.riskLevel = FinalScoreCalculator().score(
                         riskIndex
                     )   
-                    print(i,body_content_email,body_subject_email,validation_result.riskLevel) 
                 elif sender_email:
                     riskIndex = susUrlDetect(body_subject_email)["riskScore"] + analyze_email_keywords(body_content_email,subject = body_subject_email)["riskScore"]
                     validation_result.riskLevel = FinalScoreCalculator().score(
                         riskIndex
                     )   
-                    print(i,body_content_email,body_subject_email,validation_result.riskLevel)  
+                # print(validation_result.riskLevel,type(validation_result.riskLevel))
+                # print(i,body_content_email,body_subject_email,validation_result.riskLevel)  
                 # print(len(results))
                 results.append(validation_result) #THIS WILL APPEND THE DATA CLASS INTO RESULTS
             return results

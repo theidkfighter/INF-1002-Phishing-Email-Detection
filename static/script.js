@@ -323,12 +323,11 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
             statusIcon = result.is_trusted ? '✅' : '⚠️';
             statusText = result.is_trusted ? 'SAFE' : 'PHISHING';
         }
-
         tableHTML += `
             <tr class="${statusClass}">
                 <td>${result.email || 'N/A'}</td>
                 <td>${riskInfoNice}</td> 
-                <td>${result.riskLevel["risk_level"] || 'N/A'}</td>
+                <td>${result.riskLevel || 'N/A'}</td>
             </tr>
         `; //I ADDED THE RISK INFO NICE TO ADD IT INTO THE TABLE
     });

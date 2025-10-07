@@ -76,6 +76,5 @@ class FinalScoreCalculator:
 
 
 
-        return {
-            "risk_level": risk_level,
-        }
+        return risk_level
+        
