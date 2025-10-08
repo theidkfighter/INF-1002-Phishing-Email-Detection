@@ -201,7 +201,7 @@ function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalid
         detailsDisplay = result.details.map(detail => `• ${detail}`).join('<br>');
     }
 
-    // UPDATE DISPLAY RESULT MESSAGES
+    // Display validation result message
     singleResult.innerHTML = `
         <div class="result-item ${statusClass}">
             <div class="result-header">
@@ -335,7 +335,7 @@ function CSVResult(results, rowCount, trustedCount, phishingCount, invalidCount,
         return;
     }
 
-    // Update CSV Summary Validation Results - Aden
+    // CSV Summary Validation Results
     detectionInfo.innerHTML = `
         <div class="detection-info">
         <p>📊 <strong>File Analysis:</strong> ${rowCount} data rows processed</p>
@@ -469,7 +469,7 @@ function error_msg(message) {
     detectionInfo.innerHTML = '';
     singleResult.innerHTML = `
         <div class="result-item phishing">
-            <p>❌ ${message}</p>
+            <p>${message}</p>
         </div>
     `;
     csvResults.innerHTML = '';
