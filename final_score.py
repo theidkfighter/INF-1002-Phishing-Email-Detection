@@ -19,9 +19,6 @@ class FinalScoreCalculator:
         self.domain_validator = domain_validator
         self.threshold = threshold
 
-    # ------------------------------
-    # Helpers
-    # ------------------------------
     @staticmethod
     def _extract_domain_from_url(url: str) -> str:
         """Extract domain from a URL (simple method)."""
@@ -58,23 +55,18 @@ class FinalScoreCalculator:
                     break
         return {"score": score, "details": details}
 
-    # ------------------------------
-    # Main Scoring
-    # ------------------------------
-    def score(
-        self, riskIndex
-    ) -> Dict:
+    def score(self, riskIndex) -> Dict:
 
         totalriskIndex = riskIndex
-
-       
 
         if totalriskIndex == 0:
             risk_level = "SAFE"
         else:
             risk_level="PHISHING"
 
+        return {
+            
+            "risk_level": risk_level,  
 
-
-        return risk_level
+        }
         

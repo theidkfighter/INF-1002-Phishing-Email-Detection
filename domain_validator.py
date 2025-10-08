@@ -8,18 +8,55 @@ from models import ValidationResult
 class DomainValidator:
     
     def __init__(self, trusted_domains: list):
-        
         self.trusted_domains = trusted_domains
     
     def extract_domain_from_email(self, email: str) -> Optional[str]:
         
-        if not re.match(EMAIL_REGEX, email):
+        '''
+        Objective is to retrieve VALID senders' email domains through several rigorous validations
+        '''
+        
+        if not email or not isinstance(email, str):
             return None
         
-        return email.split('@')[1].lower()
+        # Checks basic email format
+        if '@' not in email:
+            return None
+        
+        try:
+            local_part, domain_part = email.split('@')
+            domain_part = domain_part.lower().strip()
+            
+            # Additional validation checks
+            if not local_part or not domain_part:
+                return None
+                
+            if '.' not in domain_part:
+                return None
+                
+            if domain_part.startswith('.') or domain_part.endswith('.'):
+                return None
+                
+            if '..' in domain_part:
+                return None
+                
+            # Regex validation
+            if not re.match(EMAIL_REGEX, email):
+                return None
+    
+            return domain_part
+            
+        except Exception as e:
+            return None
     
     # Email Validation
     def validate_email(self, email: str) -> ValidationResult:
+        
+        '''
+        Validates the email address if it is a SAFE or PHISHING email
+        
+        Otherwise, it will be deemed as an invalid email address
+        '''
         
         domain = self.extract_domain_from_email(email)
         
@@ -28,7 +65,16 @@ class DomainValidator:
                 email=email,
                 domain=None,
                 is_trusted=False,
-                message="Invalid email format"
+                message="Invalid email format or domain"
+            )
+        
+        # Additional domain format validation
+        if not re.match(DOMAIN_REGEX, domain):
+            return ValidationResult(
+                email=email,
+                domain=None,
+                is_trusted=False,
+                message="Invalid domain format"
             )
         
         is_trusted = domain in self.trusted_domains
@@ -44,7 +90,13 @@ class DomainValidator:
     # Domain Validation
     def validate_domain(self, domain: str) -> ValidationResult:
         
-        domain_lower = domain.lower()
+        '''
+        Validates the email domain if it is a SAFE or PHISHING email
+        
+        Otherwise, it will be deemed as an invalid email domain
+        '''
+        
+        domain_lower = domain.lower().strip()
 
         if not re.match(DOMAIN_REGEX, domain_lower):
             return ValidationResult(

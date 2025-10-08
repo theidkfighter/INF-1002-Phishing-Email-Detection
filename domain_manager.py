@@ -7,6 +7,12 @@ class DomainManager:
     @staticmethod
     def load_trusted_domains() -> List[str]:
         
+        '''
+        Reads the list of trustable email domains in the pre-defined whitelisted txt file
+
+        Returns a list of trustable domains
+        '''
+
         try:
             with open(TRUSTED_DOMAINS_FILE, 'r') as file:
                 domains = [
@@ -18,38 +24,3 @@ class DomainManager:
         except FileNotFoundError:
             print("trustable_email_domains.txt not found. Using default domains.")
             return DEFAULT_TRUSTED_DOMAINS
-    
-    @staticmethod
-    def add_trusted_domain(domain: str) -> bool:
-
-        try:
-            with open(TRUSTED_DOMAINS_FILE, 'a') as file:
-                file.write(f"\n{domain.lower()}")
-            return True
-        except Exception as e:
-            print(f"Error adding domain: {str(e)}")
-            return False
-    
-    @staticmethod
-    def remove_trusted_domain(domain: str) -> bool:
-        
-        try:
-            
-            with open(TRUSTED_DOMAINS_FILE, 'r') as file:
-                domains = file.readlines()
-            
-            
-            domain_lower = domain.lower()
-            filtered_domains = [
-                line for line in domains 
-                if line.strip().lower() != domain_lower
-            ]
-            
-            
-            with open(TRUSTED_DOMAINS_FILE, 'w') as file:
-                file.writelines(filtered_domains)
-            
-            return True
-        except Exception as e:
-            print(f"Error removing domain: {str(e)}")
-            return False
