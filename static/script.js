@@ -1,7 +1,7 @@
 const singleDomainForm = document.getElementById('singleDomainForm');
 const csvForm = document.getElementById('csvForm');
 const domainInput = document.getElementById('domainInput');
-const emailHeaderInput = document.getElementById('emailHeaderInput')
+const subjectTitleInput = document.getElementById('subjectTitleInput')
 const emailBodyInput = document.getElementById('emailBodyInput')
 const csvFileInput = document.getElementById('csvFile');
 const fileInfo = document.getElementById('fileInfo');
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
     loadDomains();
 });
 
-// Handles CSV file selection
+// Handles CSV file uploads
 csvFileInput.addEventListener('change', function () {
     if (!csvFileInput.files || csvFileInput.files.length === 0) {
         fileInfo.innerHTML = '';
@@ -32,7 +32,7 @@ csvFileInput.addEventListener('change', function () {
 
     const file = csvFileInput.files[0];
     const fileSize = FileSize(file.size);
-    fileInfo.innerHTML = `Selected file: ${file.name} (${fileSize})`;
+    fileInfo.innerHTML = `<strong>Selected file</strong>: ${file.name} (${fileSize})`;
 
     if (file.size > MAX_FILE_SIZE) {
         fileInfo.innerHTML += `<br><span class="error">File too big. Maximum size is ${FileSize(MAX_FILE_SIZE)}</span>`;
@@ -93,7 +93,7 @@ function updateDomainList(domains) {
         return;
     }
 
-    // Show domains
+    // Shows list of whitelisted email domains
     domains.forEach(domain => {
         const domainTag = document.createElement('span');
         domainTag.classList.add('domain-tag');
@@ -122,6 +122,9 @@ singleDomainForm.addEventListener('submit', function (e) {
     validateSingleBtn.innerHTML = '<div class="loading"></div> Validating...';
     validateSingleBtn.disabled = true; //DISABLES THE BUTTON
 
+    csvResults.innerHTML = '';
+    detectionInfo.innerHTML = '';
+    
     const formData = new FormData(); //INITIALISING THE FORMDATA TO BE SEND TO APP.PY
     formData.append('domain', domain); // formData = {'domain': var domain}
     formData.append('emailBody', emailBody)// same as above
@@ -154,8 +157,7 @@ singleDomainForm.addEventListener('submit', function (e) {
         });
 });
 
-// HERE EDITS THE RESULTS MESSAGES - ZQ
-
+// Results from the Single Domain Validation
 function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalidCount = 0) {
     resultsSection.style.display = 'block';
     resultsTitle.textContent = 'Validation Result';
@@ -174,52 +176,98 @@ function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalid
         statusText = result.is_trusted ? 'SAFE' : 'PHISHING';
     }
     
-    if (result.bodyRiskMsg == []) {
-        riskMsg = ''
+    // Formats risk message
+    if (!result.bodyRiskMsg || result.bodyRiskMsg.length === 0) {
+        riskMsg = 'No suspicious URLs detected';
     } else {
-        riskMsg = (result.bodyRiskMsg).join('\n');
+        riskMsg = result.bodyRiskMsg.map(msg => `• ${msg}`).join('<br>');
     }
 
-    detectionInfo.innerHTML = `
-        <div class="detection-info">
-            <p>📊 <strong>Detection Summary:</strong> ${trustedCount} safe domain(s), ${phishingCount} phishing domain(s), ${invalidCount} invalid domain(s)</p>
-        </div>
-    `;
+    // Formats flagged keywords
+    let keywordDisplay = 'No suspicious keywords detected';
+    if (result.flagged_keyword && result.flagged_keyword.length > 0) {
+        keywordDisplay = result.flagged_keyword.map(word => `• "${word}"`).join('<br>');
+    }
 
-                // Prepare Final Risk Score info
-    console.log(result);
-    let finalScore = result.final_score !== undefined ? result.final_score : 'N/A';
-    let finalLabel = result.label || 'N/A';
-    let finalRisk = result.risk_level || 'N/A';
-    let detailsList = (result.details && result.details.length > 0)
-    let keywordRiskLevel = result.keyword_risk_level
-    console.log(keywordRiskLevel)
-    let flagged_keyword = result.flagged_keyword
-        ? `<ul>${result.flagged_keyword.map(d => `<li>${d}</li>`).join('')}</ul>`
-        : 'No details available';
+    // Formats edit distance message
+    let editDistanceMsg = 'No similar domains found';
+    if (result.edit_distance && result.edit_distance.message) {
+        editDistanceMsg = result.edit_distance.message;
+    }
 
-    console.log(result.flagged_keyword);
+    // Formats scoring details
+    let detailsDisplay = '';
+    if (result.details && result.details.length > 0) {
+        detailsDisplay = result.details.map(detail => `• ${detail}`).join('<br>');
+    }
 
-    //THIS DISPLAYS THE RESULTS MESSAGES
+    // UPDATE DISPLAY RESULT MESSAGES
     singleResult.innerHTML = `
         <div class="result-item ${statusClass}">
-            <p><strong>Email/Domain:</strong> ${result.email || 'Invalid format'}</p>
-            <p><strong>Domain:</strong> ${result.domain || 'N/A'}</p>
-            <p><strong>Status:</strong> ${statusIcon} ${statusText}</p>
-            <p><strong>Message:</strong> ${result.message}</p>
-            <p><strong>Risk Informations:</strong>${riskMsg}</p>
-            <hr>
-            <p><strong>Risk Level:</strong>${finalRisk}</p>
-            <hr>
-            <p>Keyword detection: ${keywordRiskLevel} chance of phishing email</p>
-            ${flagged_keyword}
-
-            <p><strong>Edit Distance Check:</strong> ${(result.edit_distance && result.edit_distance.message) || ''}</p>
+            <div class="result-header">
+                <h3>${statusIcon} ${statusText}</h3>
+                <p class="result-message">${result.message}</p>
+            </div>
+            
+            <div class="result-details">
+                <div class="detail-row">
+                    <span class="detail-label">Email/Domain:</span>
+                    <span class="detail-value">${result.email || 'Invalid format'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Domain:</span>
+                    <span class="detail-value">${result.domain || 'N/A'}</span>
+                </div>
+                
+                <div class="risk-section">
+                    <h4>Risk Assessment</h4>
+                    <div class="detail-row">
+                        <span class="detail-label">Risk Level:</span>
+                        <span class="detail-value risk-${result.risk_level?.toLowerCase() || 'na'}">${result.risk_level || 'N/A'}</span>
+                    </div>
+                    ${result.final_score !== undefined && result.final_score !== null && result.final_score !== 'N/A' ? `
+                    <div class="detail-row">
+                        <span class="detail-label">Risk Score:</span>
+                        <span class="detail-value">${result.final_score}</span>
+                    </div>
+                    ` : ''}
+                </div>
+                
+                <div class="detection-section">
+                    <h4>Detection Details</h4>
+                    
+                    <div class="detection-item">
+                        <strong>URL Analysis:</strong>
+                        <div class="detection-content">${riskMsg}</div>
+                    </div>
+                    
+                    <div class="detection-item">
+                        <strong>Keyword Analysis:</strong>
+                        <div class="detection-content">
+                            <span class="risk-rating">${result.keyword_risk_level || 'N/A'} chance of phishing</span>
+                            ${keywordDisplay !== 'No suspicious keywords detected' ? `<div class="flagged-keywords">${keywordDisplay}</div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="detection-item">
+                        <strong>Domain Similarity Check:</strong>
+                        <div class="detection-content">${editDistanceMsg}</div>
+                    </div>
+                    
+                    ${detailsDisplay ? `
+                    <div class="detection-item">
+                        <strong>Scoring Details:</strong>
+                        <div class="detection-content">${detailsDisplay}</div>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
         </div>
     `;
+
 }
 
-// THIS IS FOR THE CSV UPLOADS (ZQ HAVENT ADD IN HIS PART)
+// Validation of CSV file contents
 csvForm.addEventListener('submit', function (e) {
     e.preventDefault();
 
@@ -251,12 +299,16 @@ csvForm.addEventListener('submit', function (e) {
             if (data.error) {
                 error_msg(data.error);
             } else {
-                const results = data.results;
-                const trustedCount = results.filter(r => !r.is_invalid && r.is_trusted).length;
-                const phishingCount = results.filter(r => !r.is_invalid && !r.is_trusted).length;
-                const invalidCount = results.filter(r => r.is_invalid).length;
 
-                CSVResult(results, data.row_count, trustedCount, phishingCount, invalidCount);
+                const results = data.results;
+                const trustedCount = data.trusted_count || 0;
+                const phishingCount = data.phishing_count || 0;
+                const invalidCount = data.invalid_count || 0;
+                const noEmailCount = data.no_email_count || 0;
+                const rowCount = data.row_count || results.length;
+
+                CSVResult(results, rowCount, trustedCount, phishingCount, invalidCount, noEmailCount);    
+
             }
         })
         .catch(error => {
@@ -270,29 +322,30 @@ csvForm.addEventListener('submit', function (e) {
         });
 });
 
-// CSV file validation results (ignores invalid email domains)
-function CSVResult(results, rowCount, trustedCount, phishingCount) {
+// CSV file validation results (ignores rows with invalid/no email domains)
+function CSVResult(results, rowCount, trustedCount, phishingCount, invalidCount, noEmailCount) {
     resultsSection.style.display = 'block';
     resultsTitle.textContent = `CSV Validation Results (${rowCount} records processed)`;
     processingProgress.innerHTML = '';
     singleResult.innerHTML = '';
 
     if (results.length === 0) {
-        detectionInfo.innerHTML = '<div class="detection-info"><p>❌ <strong>No sender email addresses found in the CSV file.</strong></p></div>';
-        csvResults.innerHTML = '<p>Please check if your CSV file contains sender email addresses.</p>';
+        detectionInfo.innerHTML = '<div class="detection-info"><p>❌ <strong>No data found in the CSV file.</strong></p></div>';
+        csvResults.innerHTML = '<p>Please check if your CSV file contains valid domain data.</p>';
         return;
     }
 
+    // Update CSV Summary Validation Results - Aden
     detectionInfo.innerHTML = `
         <div class="detection-info">
-            <p>📊 <strong>Detection Summary:</strong> ${trustedCount} safe domains, ${phishingCount} phishing domains</p>
-            <p>✅ <strong>Sender emails successfully detected and validated</strong></p>
+        <p>📊 <strong>File Analysis:</strong> ${rowCount} data rows processed</p>
+        <p>🔍 <strong>Detection Summary:</strong> ${trustedCount} safe domains, ${phishingCount} phishing domains, ${invalidCount} invalid domains</p>
+        ${noEmailCount > 0 ? `<p>📝 <strong>Note:</strong> ${noEmailCount} rows contained no email addresses</p>` : ''}
         </div>
     `;
 
     // Displays first 100 results with an option to download full results
     const displayResults = results.slice(0, 100);
-    console.log(displayResults)
 
     let tableHTML = `
         <div class="table-container">
@@ -300,80 +353,103 @@ function CSVResult(results, rowCount, trustedCount, phishingCount) {
             <thead>
                 <tr>
                     <th>Email</th>
-                    <th>Risk Informations</th>
+                    <th>Domain</th>
                     <th>Risk Level</th>
+                    <th>Details</th>
                 </tr>
             </thead>
             <tbody>
     `;
 
+    // Display format for CSV file validaion results
     displayResults.forEach(result => {
-        let statusClass, statusIcon, statusText,riskInfoNice;
-        if (result.riskInfo == []) { //SEE IF THE RISK INFORMATION IS EMPTY ANOT
-            riskInfoNice = ''
-        }else {
-            riskInfoNice = result.riskInfo["riskMsg"].join('\n');
-        }
-        if (result.is_invalid || !result.domain || result.domain === 'Invalid') {
+        let statusClass, statusIcon, statusText;
+        
+        if (result.risk_level === "SAFE") {
+            statusClass = 'safe';
+            statusIcon = '✅';
+            statusText = 'SAFE';
+        } else if (result.risk_level === "PHISHING") {
+            statusClass = 'phishing';
+            statusIcon = '⚠️';
+            statusText = 'PHISHING';
+        } else if (result.risk_level === "INVALID DOMAIN") {
             statusClass = 'error';
-            statusIcon = '❌';
+            statusIcon = '';
             statusText = 'INVALID DOMAIN';
         } else {
-            statusClass = result.is_trusted ? 'safe' : 'phishing';
-            statusIcon = result.is_trusted ? '✅' : '⚠️';
-            statusText = result.is_trusted ? 'SAFE' : 'PHISHING';
+            statusClass = 'error';
+            statusIcon = '';
+            statusText = result.risk_level || 'UNKNOWN';
         }
+        
+        // Add relevant details to the result
+        let details = [];
+        if (result.edit_distance_message && result.edit_distance_message !== "Domain is trusted") {
+            details.push(`• ${result.edit_distance_message}`);
+        }
+        if (result.url_detection_messages && result.url_detection_messages.length > 0) {
+            details.push(`• ${result.url_detection_messages.length} suspicious URL(s)`);
+        }
+        if (result.flagged_keywords && result.flagged_keywords.length > 0) {
+            details.push(`• ${result.flagged_keywords.length} suspicious keyword(s)`);
+        }
+        
+        const detailsText = details.length > 0 ? details.join('<br>') : 'No suspicious indicators';
+        
         tableHTML += `
             <tr class="${statusClass}">
                 <td>${result.email || 'N/A'}</td>
-                <td>${riskInfoNice}</td> 
-                <td>${result.riskLevel || 'N/A'}</td>
+                <td>${result.domain || 'N/A'}</td>
+                <td>${statusIcon} ${statusText}</td>
+                <td>${detailsText}</td>
             </tr>
-        `; //I ADDED THE RISK INFO NICE TO ADD IT INTO THE TABLE
+        `;
     });
-
+    
     tableHTML += `
             </tbody>
         </table>
         </div>
     `;
-
+    
     if (results.length > 100) {
         tableHTML += `<p>Showing first 100 results. Total records: ${results.length}</p>`;
     }
-
+    
     tableHTML += `
         <button id="downloadResultsBtn" class="download-btn">Download Full Results as CSV</button>
     `;
-
+    
     csvResults.innerHTML = tableHTML;
-
-    document.getElementById('downloadResultsBtn').addEventListener('click', function () {
+    
+    document.getElementById('downloadResultsBtn').addEventListener('click', function() {
         downloadCSVResults(results);
     });
+
 }
 
+
+
+// Download CSV file validation results
 function downloadCSVResults(results) {
     const csvContent = [
-        ['Email', 'Domain', 'Status', 'Message', 'Edit Distance Check'],
+        ['Email', 'Domain', 'Status', 'Message', 'Keyword Warnings', 'URL Warnings'],
         ...results.map(r => {
-            let status;
-            if (r.is_invalid || !r.domain || r.domain === 'Invalid') {
-                status = 'INVALID DOMAIN';
-            } else {
-                status = r.is_trusted ? 'SAFE' : 'PHISHING';
-            }
+            
+            const urlWarnings = r.url_detection_messages ? r.url_detection_messages.join('; ') : '';
+            const keywordWarnings = r.flagged_keywords ? r.flagged_keywords.join('; ') : '';
 
             return [
                 r.email || '',
                 r.domain || '',
-                status,
-                r.message || '',
-                r.riskInfo || ''
-                (r.edit_distance && r.edit_distance.message) || ''
+                r.risk_level || '',
+                r.edit_distance_message || '',
+                keywordWarnings,
+                urlWarnings
             ];
         })
-    ].map(e => e.join(',')).join('\n');
+    ].map(e => e.map(field => `"${field}"`).join(',')).join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);

@@ -46,43 +46,32 @@ def validate():
                 
                 try:
                     
-                    results = csv_processor.process_csv_file(file, domain_validator)
-                    # Attach edit-distance result for each CSV row
-                    enhanced = []
-                    for r in results:
-                        # r is a ValidationResult dataclass
-                        try:
-                            # compute using the email if available, otherwise use domain
-                            if r.email and '@' in r.email:
-                                ed = editDistanceCheck(r.email, trusted_domains)
-                            elif r.domain:
-                                ed = editDistanceCheck(f"user@{r.domain}", trusted_domains)
-                            else:
-                                ed = {"status": "unknown", "matched": None, "message": "No sender available", "riskScore": 0}
-                        except Exception:
-                            ed = {"status": "error", "matched": None, "message": "edit-distance error", "riskScore": 0}
+                    results = csv_processor.process_csv_file(file, domain_validator, trusted_domains)
 
-                        rec = r.__dict__.copy()
-                        # print(rec["riskLevel"])
-                        # print(ed["riskScore"])
-                        if rec["riskLevel"] == "SAFE": #if it was already detected as PHISHING then it wont run the scorer again
-                            rec["riskLevel"] = scorer.score(
-                                ed["riskScore"]
-                            )
-                            print(rec["riskLevel"])
-                        rec['edit_distance'] = ed
-                        enhanced.append(rec)
-                    # print(len(enhanced))
-                    trusted_count = sum(1 for r in results if r.is_trusted)
-                    phishing_count = len(results) - trusted_count
+                    # Tabulates the number of results in CSV file
+                    trusted_count = sum(1 for r in results if r.get("risk_level") == "SAFE")
+                    phishing_count = sum(1 for r in results if r.get("risk_level") == "PHISHING")
+                    invalid_count = sum(1 for r in results if r.get("risk_level") == "INVALID DOMAIN")
+                    no_email_count = sum(1 for r in results if r.get("risk_level") == "NO EMAIL FOUND")
+                    
+                    total_processed = len(results)
+
+                    print(f"Total results: {total_processed}")
+                    print(f"Safe: {trusted_count}")
+                    print(f"Phishing: {phishing_count}") 
+                    print(f"Invalid: {invalid_count}")
+                    print(f"No email: {no_email_count}")
 
                     return jsonify({
-                        "results": enhanced, 
+                        "results": results, 
                         "type": "csv",
-                        "row_count": len(results),
+                        "row_count": total_processed,  # Total rows processed
                         "trusted_count": trusted_count,
-                        "phishing_count": phishing_count
+                        "phishing_count": phishing_count,
+                        "invalid_count": invalid_count,
+                        "no_email_count": no_email_count
                     })
+
                 except Exception as e:
                     app.logger.error(f"Error processing CSV: {str(e)}")
                     app.logger.error(traceback.format_exc())
@@ -117,9 +106,21 @@ def validate():
 
         riskIndex = email_bodyRiskMsg["riskScore"] + edit_distance_result["riskScore"]+ flagged_keyword_and_risk_rating["riskScore"]
 
-        scoring_result = scorer.score(
-            riskIndex
-        )
+        # Checks if sender's email domain is invalid before calculating the final score index
+        is_invalid_domain = result.domain is None or result.domain == 'Invalid' or not result.domain
+
+        if is_invalid_domain:
+            # Default scoring for invalid domains
+            # Risk level is defaulted to "N/A"
+            scoring_result = {
+                "score": 0.0,
+                "risk_level": "N/A",
+                "details": ["Invalid domain - scoring skipped"]
+            }
+        else:
+            # Calculates score only for valid domains
+            scoring_result = scorer.score(riskIndex)
+
         # Build result dictionary
         result_dict = {
             "email": result.email,
@@ -130,11 +131,9 @@ def validate():
             "risk_level": scoring_result["risk_level"],
             'flagged_keyword':flagged_keyword_and_risk_rating['flagged_word'],
             'keyword_risk_level':flagged_keyword_and_risk_rating['risk_rating'],
-            "edit_distance": edit_distance_result
+            "edit_distance": edit_distance_result,
+            "is_invalid": is_invalid_domain  # If domain is invalid
         }
-
-
-        #print("DEBUG RESULT:", result_dict)
         
         return jsonify({
             "results": [result_dict], 
@@ -188,43 +187,6 @@ def get_domains():
     except Exception as e:
         app.logger.error(f"Error in get_domains: {str(e)}")
         return jsonify({"error": "Failed to load domains"}), 500
-
-# @app.route('/domains', methods=['POST'])
-# def add_domain():
-
-#     try:
-#         domain = request.json.get('domain', '').strip()
-        
-#         if not domain:
-#             return jsonify({"error": "No domain provided"}), 400
-        
-#         success = DomainManager.add_trusted_domain(domain)
-        
-#         if success:
-#             trusted_domains.append(domain.lower())
-#             return jsonify({"message": "Domain added successfully"})
-#         else:
-#             return jsonify({"error": "Failed to add domain"}), 500
-#     except Exception as e:
-#         app.logger.error(f"Error in add_domain: {str(e)}")
-#         return jsonify({"error": "An unexpected error occurred"}), 500
-
-# @app.route('/domains/<domain>', methods=['DELETE'])
-# def remove_domain(domain):
-
-#     try:
-#         success = DomainManager.remove_trusted_domain(domain)
-        
-#         if success:
-#             domain_lower = domain.lower()
-#             if domain_lower in trusted_domains:
-#                 trusted_domains.remove(domain_lower)
-#             return jsonify({"message": "Domain removed successfully"})
-#         else:
-#             return jsonify({"error": "Failed to remove domain"}), 500
-#     except Exception as e:
-#         app.logger.error(f"Error in remove_domain: {str(e)}")
-#         return jsonify({"error": "An unexpected error occurred"}), 500
 
 @app.errorhandler(413)
 def too_large(e):
