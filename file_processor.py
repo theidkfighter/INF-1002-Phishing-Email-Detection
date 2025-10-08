@@ -244,7 +244,7 @@ class CSVProcessor:
                 
                 # If domain validation fails, remaining validations are skipped
                 if domain_result.domain is None:
-                    print(f"❌ DEBUG: Row {i} - DOMAIN VALIDATION FAILED: {sender_email}")
+
                     results.append({
                         "row_number": i,
                         "email": sender_email,
@@ -310,16 +310,16 @@ class CSVProcessor:
             no_email_count = len([r for r in results if r["risk_level"] == "NO EMAIL FOUND"])
             total_invalid = len([r for r in results if r["is_invalid"]])
             
-            print(f"📈 DEBUG: Safe emails: {safe_count}")
-            print(f"📈 DEBUG: Phishing emails: {phishing_count}")
-            print(f"📈 DEBUG: Invalid domains: {invalid_domain_count}") 
-            print(f"📈 DEBUG: No email rows: {no_email_count}")
-            print(f"📈 DEBUG: Total invalid (all types): {total_invalid}")
-            print(f"📈 DEBUG: Sum check: {safe_count + phishing_count + invalid_domain_count + no_email_count} = {len(results)}")
+            print(f"CHECK: Safe emails: {safe_count}")
+            print(f"CHECK: Phishing emails: {phishing_count}")
+            print(f"CHECK: Invalid domains: {invalid_domain_count}") 
+            print(f"CHECK: No email rows: {no_email_count}")
+            print(f"CHECK: Total invalid (all types): {total_invalid}")
+            print(f"CHECK: Sum check: {safe_count + phishing_count + invalid_domain_count + no_email_count} = {len(results)}")
             
             return results
             
         except Exception as e:
-            print(f"💥 DEBUG: Error in CSV processing: {str(e)}")
+            print(f"CHECK: Error in CSV processing: {str(e)}")
             traceback.print_exc()
             raise ValueError(f"Error processing CSV file: {str(e)}")
