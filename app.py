@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 
-trusted_domains = DomainManager.load_trusted_domains()
+trusted_domains = DomainManager.load_trusted_domains()  # The list of domains in whitelist is loaded
 domain_validator = DomainValidator(trusted_domains)
 csv_processor = CSVProcessor()
 scorer = FinalScoreCalculator()
@@ -98,11 +98,8 @@ def validate():
             edit_distance_result = editDistanceCheck(f"user@{domain_input}", trusted_domains)
 
         email_bodyRiskMsg = susUrlDetect(email_bodyInput) # THIS IS MY SUS URL DETECT FOR BODY RISK MSG BUT YOU MAY CHANGE TO YOUR CODE TO TRY IT OUT AND SEE IF IT WILL PRINT IN THE WEB
-        
-
 
         flagged_keyword_and_risk_rating = analyze_email_keywords(email_bodyInput,email_headerInput)
-
 
         riskIndex = email_bodyRiskMsg["riskScore"] + edit_distance_result["riskScore"]+ flagged_keyword_and_risk_rating["riskScore"]
 

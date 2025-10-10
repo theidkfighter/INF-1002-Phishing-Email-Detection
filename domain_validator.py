@@ -77,6 +77,7 @@ class DomainValidator:
                 message="Invalid domain format"
             )
         
+        # Validates domain against the whitelist
         is_trusted = domain in self.trusted_domains
         
         return ValidationResult(
@@ -106,6 +107,7 @@ class DomainValidator:
                 message="Invalid domain format"
             )
         
+        # Validates the domain against the whitelist
         is_trusted = domain_lower in self.trusted_domains
         
         return ValidationResult(

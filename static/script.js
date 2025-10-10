@@ -1,4 +1,5 @@
-    // Formats risk message
+
+// Formats risk message
 const singleDomainForm = document.getElementById('singleDomainForm');
 const csvForm = document.getElementById('csvForm');
 const domainInput = document.getElementById('domainInput');
@@ -444,8 +445,6 @@ function CSVResult(results, rowCount, trustedCount, phishingCount, invalidCount,
     });
 
 }
-
-
 
 // Download CSV file validation results
 function downloadCSVResults(results) {
