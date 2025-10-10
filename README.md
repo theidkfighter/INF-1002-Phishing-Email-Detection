@@ -15,18 +15,18 @@ Our program features include:\
 
 **Final Risk Scoring** - Calculates the results from all the rules to classify the emails as 'Safe' or 'Phishing'.
 
-Modules to install to run the program: **Flask**, **tldextract**
+Ensure the following modules are installed to run the program: **Flask**, **tldextract**
 
 # PHISHGUARD TESTCASES
-**Test Case 1**: Single Domain Validation with valid email - SAFE email
+**Test Case 1**: Single Domain Validation with a valid Safe email domain and body content
 
 Email (mandatory): user@gmail.com\
 Subject Title (optional): Hello World\
 Email Body (mandatory): Beautiful skies
 
-Expected Output: SAFE with Risk Level and Detection Details displayed.
+Expected Output: SAFE domain with the Risk Level reflected as "LOW" and Detection Details displayed.
 
-**Test Case 2**: Single Domain Validation with invalid email
+**Test Case 2**: Single Domain Validation with an invalid email
 
 Email (mandatory): user@gmail\
 Subject Title (optional): Hello World\
@@ -34,15 +34,31 @@ Email Body (mandatory): Beautiful skies
 
 Expected Output: INVALID domain and 'N/A' is displayed for both Risk Level and Detection Details.
 
-**Test Case 3**: Single Domain Validation with valid email - PHISHING email
+**Test Case 3**: Single Domain Validation with a valid Phishing email domain but a Safe body content
+
+Email (mandatory): user@outloook.com\
+Subject Title (Optional):\
+Email Body (mandatory): Hello World
+
+Expected Output: PHISHING domain with the Risk Level reflected as "MEDIUM" and Detection Details displayed.
+
+**Test Case 4**: Single Domain Validation with a valid Safe email domain but a Phishing body content
+
+Email (mandatory): user@outlook.com\
+Subject Title (Optional):\
+Email Body (mandatory): Click on this link to earn free money: https://172.169.152.10:80/
+
+Expected Output: SAFE domain with the Risk Level reflected as "MEDIUM" and Detection Details displayed.
+
+**Test Case 5**: Single Domain Validation with a valid Phishing email domain and body content
 
 Email (mandatory): user@gmmail.com\
 Subject Title (Optional):\
 Email Body (mandatory): Click on this link to earn free money: https://172.169.152.10:80/
 
-Expected Output: PHISHING with Risk Level and Detection Details displayed.
+Expected Output: PHISHING domain with Risk Level reflected as "HIGH" and Detection Details displayed.
 
-**Test Case 4**: CSV File Validation
+**Test Case 6**: CSV File Validation
 
 Upload "Nigerian Small" CSV file.
 
