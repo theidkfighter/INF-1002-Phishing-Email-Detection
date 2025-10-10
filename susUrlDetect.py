@@ -6,7 +6,11 @@ import tldextract
 # email_body = "asdiamsodsapcpo ajd jaspod jaspo www.facebook.com asijdia https://172.169.152.10:80 sjd ojop jsapojdasjod jasodj posaj posajpodjapos <a href='https://www.google.com'>http://yahoo.com</a> jdpoajs poajspojop ajpojsap ojpaosj doj ansdnaslkdnaklsdn https://www.yahoo.com apisojdpioas jdpoasjdpoasj dpojasp odjapos djpoasj dpoasjd poasjd poajspdo japosdjaspo https://bit.ly/123710237 ajslkdklasndkl; asndpi asndi ans idnasios dnioasn ipdoansio dnaiosd nioans dionaoisd naiosdn iaons diojaniosd nian sdi https://www.paypal.asd.verify.asdf.payme.addaccount.yes.com"
 # email_body = 'asdonaioscnioacnipascniasncisan ciopansiocnaiso cnioan cios ancoiasn cioanioa nsioc'
 
+"""
+This program is function as a URL detector. It will first read through the whole email body and extract out all URLs, after that it will 
+go through series of comparison code to check if it is suspicous and give risk score and risk informations. 
 
+"""
 def susUrlDetect(email_body):
     result = {'riskMsg':[],"riskScore":0}
     riskScore = 0
