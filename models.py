@@ -2,6 +2,7 @@
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, List
 
+# Formats the structure of the validation results
 @dataclass
 class ValidationResult:
 
@@ -14,6 +15,7 @@ class ValidationResult:
     riskLevel: str = "None"
     keyword_risk_rating: str = "None"
 
+# Formats the structure of validation requests
 @dataclass
 class ValidationRequest:
 

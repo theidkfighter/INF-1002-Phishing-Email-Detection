@@ -91,6 +91,3 @@ class FinalScoreCalculator:
 
         # return both the risk level (string) and numeric score
         return {"risk_level": risk_level, "score": risk_index}
-
-        
-        
