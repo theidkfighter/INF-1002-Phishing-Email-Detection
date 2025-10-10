@@ -1,6 +1,6 @@
 # PHISHGUARD
 
-PhishGuard is a rule-based system coded in Python to detect phishing emails. In our program, users can either paste the email content from a Single Email or upload a CSV of emails. The output is the email validation result in which it determines if the email is considered as 'Safe' or 'Phishing' based on a Final Risk Scoring result.
+PhishGuard is a web-based phishing email detection program mainly developed in Python. In our program, users can either paste the email content from a Single Email or upload a CSV of emails. The output is the email validation result in which it determines if the email is considered as 'Safe' or 'Phishing' based on a generated Final Risk Score.
 
 Our program features include:\
 **Whitelist Check** - Checks if the sender's email address is on a predefined whitelist.
@@ -14,6 +14,8 @@ Our program features include:\
 **Suspicious URL Detection** - Identifies links that do not correspond to the claimed domain or contain IP addresses instead of domains.
 
 **Final Risk Scoring** - Calculates the results from all the rules to classify the emails as 'Safe' or 'Phishing'.
+
+Modules to install to run the program: **Flask**, **tldextract**
 
 # PHISHGUARD TESTCASES
 **Test Case 1**: Single Domain Validation with valid email - SAFE email
