@@ -1,3 +1,4 @@
+    // Formats risk message
 const singleDomainForm = document.getElementById('singleDomainForm');
 const csvForm = document.getElementById('csvForm');
 const domainInput = document.getElementById('domainInput');
@@ -171,9 +172,24 @@ function SingleDomainResult(result, trustedCount = 0, phishingCount = 0, invalid
         statusIcon = '❌';
         statusText = 'INVALID DOMAIN';
     } else {
-        statusClass = result.is_trusted ? 'safe' : 'phishing';
-        statusIcon = result.is_trusted ? '✅' : '⚠️';
-        statusText = result.is_trusted ? 'SAFE' : 'PHISHING';
+        const risk = result.risk_level?.toUpperCase();
+        if (risk === "LOW") {
+            statusClass = 'safe';
+            statusIcon = '✅';
+            statusText = 'LOW RISK';
+        } else if (risk === "MEDIUM") {
+            statusClass = 'warning';
+            statusIcon = '⚠️';
+            statusText = 'MEDIUM RISK';
+        } else if (risk === "HIGH") {
+            statusClass = 'phishing';
+            statusIcon = '❌';
+            statusText = 'HIGH RISK';
+        } else {
+            statusClass = 'error';
+            statusIcon = '❓';
+            statusText = 'UNKNOWN';
+        }
     }
     
     // Formats risk message

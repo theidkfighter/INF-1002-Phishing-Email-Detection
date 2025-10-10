@@ -119,7 +119,8 @@ def validate():
             }
         else:
             # Calculates score only for valid domains
-            scoring_result = scorer.score(riskIndex)
+            scoring_result = scorer.classify(riskIndex)
+            scoring_result["final_score"] = round(riskIndex,2)
 
         # Build result dictionary
         result_dict = {
